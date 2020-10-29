@@ -1,5 +1,4 @@
-import {Keys} from "core/dom"
-import {UIEvent, PanEvent, TapEvent, MoveEvent, KeyEvent} from "core/ui_events"
+import {UIEvent} from "core/ui_events"
 import * as p from "core/properties"
 import {isArray} from "core/util/types"
 import {MultiLine} from "models/glyphs/multi_line"
@@ -7,7 +6,8 @@ import {Patches} from "models/glyphs/patches"
 import {Bezier} from "models/glyphs/bezier"
 //import {Circle} from "models/glyphs/circle"
 //import {Text} from "models/glyphs/text"
-import {PolyTool, PolyToolView} from "models/tools/edit/poly_tool"
+import {PolyTool} from "models/tools/edit/poly_tool"
+import {PolyDrawToolView} from "models/tools/edit/poly_draw_tool"
 import {bk_tool_icon_poly_draw} from "styles/icons"
 //import {patch_to_column} from "models/sources/column_data_source"
 
@@ -15,18 +15,8 @@ export interface HasPolyGlyph {
   glyph: MultiLine | Patches | Bezier
 }
 
-export class FrontDrawToolView extends PolyToolView {
+export class FrontDrawToolView extends PolyDrawToolView {
   model: FrontDrawTool
-  _drawing: boolean = false
-  _initialized: boolean = false
-
-  _tap(ev: TapEvent): void {
-    if (this._drawing)
-      this._draw(ev, 'add', true)
-    else
-      this._select_event(ev, this._select_mode(ev), this.model.renderers)
-  }
-
   _draw(ev: UIEvent, mode: string, emit: boolean = false): void {
     const renderer = this.model.renderers[0]
     const bez = this.model.renderers[1]
@@ -143,7 +133,6 @@ export class FrontDrawToolView extends PolyToolView {
               const x1 = bez_ds.get_array<number>(x1key)
               const y1 = bez_ds.get_array<number>(y1key)
               const beznumber = x0.length-1
-              console.log(beznumber)
               x0[beznumber] = xs[xs.length-5]
               y0[beznumber] = ys[ys.length-5]
               cx0[beznumber] = xs[xs.length-4]
@@ -179,10 +168,11 @@ export class FrontDrawToolView extends PolyToolView {
               const H = y0[beznumber]
 
               //calculate arc-length (approximately)
-              const segments = 150 //number of segments
+              const segments = 20 //number of segments
               let temp_x = []
               let temp_y = []
               let temp_l = [0]
+              console.log('Calculating text stamp locations with ' +segments+' segments')
               for(var i=0; i < segments; i+=1)
               {
                   let t = i/segments
@@ -193,8 +183,9 @@ export class FrontDrawToolView extends PolyToolView {
                   }
               }
               const total_length = temp_l[temp_l.length-1]
-              const spacing = 1
+              const spacing = 1000
 
+              console.log('drawing text stamps over '+total_length)
               //draw points, text glyph at each one
               for(var i=0.0; i < total_length; i+=spacing)
               {
@@ -208,13 +199,13 @@ export class FrontDrawToolView extends PolyToolView {
                      //interpolate
                      const segmentFraction = (i - temp_l[i_index-1]) / (temp_l[i_index] - temp_l[i_index-1])
                      t = (temp_l[i_index -1] + segmentFraction) / total_length  // 1.x × 
-                     console.log([t])
                   }
                   if(t > 1) 
                   {
                      t= 1;
                   }
 
+                  console.log('Pushing')
                   text_ds.get_array('x').push(A*t**3 + B*t**2 +C*t +D) //At³ + Bt² + Ct + D
                   text_ds.get_array('y').push(E*t**3 + F*t**2 +G*t +H)
                   //calculate angle of text 
@@ -232,161 +223,6 @@ export class FrontDrawToolView extends PolyToolView {
      }
      this._emit_cds_changes(bez_ds, true, false, emit)
      this._emit_cds_changes(cds, true, false, emit)
-  }
-
-  _show_vertices(): void {
-    if (!this.model.active) { return }
-    const xs: number[] = []
-    const ys: number[] = []
-    for (let i=0; i<this.model.renderers.length; i++) {
-      const renderer = this.model.renderers[i]
-      const cds = renderer.data_source
-      const glyph: any = renderer.glyph
-      const [xkey, ykey] = [glyph.xs.field, glyph.ys.field]
-      if (xkey) {
-        for (const array of cds.get_array(xkey))
-          Array.prototype.push.apply(xs, array)
-      }
-      if (ykey) {
-        for (const array of cds.get_array(ykey))
-          Array.prototype.push.apply(ys, array)
-      }
-      if (this._drawing && (i == (this.model.renderers.length-1))) {
-        // Skip currently drawn vertex
-        xs.splice(xs.length-1, 1)
-        ys.splice(ys.length-1, 1)
-      }
-    }
-    this._set_vertices(xs, ys)
-  }
-
-  _doubletap(ev: TapEvent): void {
-    if (!this.model.active)
-      return
-    if (this._drawing) {
-      this._drawing = false
-      this._draw(ev, 'edit', true)
-    } else {
-      this._drawing = true
-      this._draw(ev, 'new', true)
-    }
-  }
-
-  _move(ev: MoveEvent): void {
-    if (this._drawing) {
-      this._draw(ev, 'edit')
-    }
-  }
-
-  _remove(): void {
-    const renderer = this.model.renderers[0]
-    const cds = renderer.data_source
-    const glyph: any = renderer.glyph
-    const [xkey, ykey] = [glyph.xs.field, glyph.ys.field]
-    if (xkey) {
-      const xidx = cds.data[xkey].length-1
-      const xs = cds.get_array<number[]>(xkey)[xidx]
-      xs.splice(xs.length-1, 1)
-    }
-    if (ykey) {
-      const yidx = cds.data[ykey].length-1
-      const ys = cds.get_array<number[]>(ykey)[yidx]
-      ys.splice(ys.length-1, 1)
-    }
-    this._emit_cds_changes(cds)
-  }
-
-  _keyup(ev: KeyEvent): void {
-    if (!this.model.active || !this._mouse_in_frame)
-      return
-    for (const renderer of this.model.renderers) {
-      if (ev.keyCode === Keys.Backspace) {
-        this._delete_selected(renderer)
-      } else if (ev.keyCode == Keys.Esc) {
-        if (this._drawing) {
-          this._remove()
-          this._drawing = false
-        }
-        renderer.data_source.selection_manager.clear()
-      }
-    }
-  }
-
-  _pan_start(ev: PanEvent): void {
-    if (!this.model.drag)
-      return
-    this._select_event(ev, "append", this.model.renderers)
-    this._basepoint = [ev.sx, ev.sy]
-  }
-
-  _pan(ev: PanEvent): void {
-    if (this._basepoint == null || !this.model.drag)
-      return
-    const [bx, by] = this._basepoint
-    // Process polygon/line dragging
-    for (const renderer of this.model.renderers) {
-      const basepoint = this._map_drag(bx, by, renderer)
-      const point = this._map_drag(ev.sx, ev.sy, renderer)
-      if (point == null || basepoint == null)
-        continue
-
-      const cds = renderer.data_source
-      // Type once dataspecs are typed
-      const glyph: any = renderer.glyph
-      const [xkey, ykey] = [glyph.xs.field, glyph.ys.field]
-      if (!xkey && !ykey)
-        continue
-      const [x, y] = point
-      const [px, py] = basepoint
-      const [dx, dy] = [x-px, y-py]
-      for (const index of cds.selected.indices) {
-        let length, xs, ys
-        if (xkey) xs = cds.data[xkey][index]
-        if (ykey) {
-          ys = cds.data[ykey][index]
-          length = ys.length
-        } else {
-          length = xs.length
-        }
-        for (let i = 0; i < length; i++) {
-          if (xs) xs[i] += dx
-          if (ys) ys[i] += dy
-        }
-      }
-      cds.change.emit()
-    }
-    this._basepoint = [ev.sx, ev.sy]
-  }
-
-  _pan_end(ev: PanEvent): void {
-    if (!this.model.drag)
-      return
-    this._pan(ev)
-    for (const renderer of this.model.renderers)
-      this._emit_cds_changes(renderer.data_source)
-    this._basepoint = null
-  }
-
-  activate(): void {
-    if (!this.model.vertex_renderer || !this.model.active)
-      return
-    this._show_vertices()
-    if (!this._initialized) {
-      for (const renderer of this.model.renderers) {
-        const cds = renderer.data_source
-        cds.connect(cds.properties.data.change, () => this._show_vertices())
-      }
-    }
-    this._initialized = true
-  }
-
-  deactivate(): void {
-    if (this._drawing) {
-      this._remove()
-      this._drawing = false
-    }
-    if (this.model.vertex_renderer)
-      this._hide_vertices()
   }
 }
 

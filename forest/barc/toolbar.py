@@ -9,7 +9,8 @@ from bokeh.models.tools import PolyDrawTool, PointDrawTool, ToolbarBox, Freehand
 from bokeh.events import ButtonClick
 from forest import wind, data, tools, redux
 import forest.middlewares as mws
-from . import front
+#from . import front
+from .front_tool import FrontDrawTool
 
 
 class BARC:
@@ -27,6 +28,7 @@ class BARC:
         self.barcTools = bokeh.models.layouts.Column(name="barcTools")
         self.source['polyline'] = ColumnDataSource(data.EMPTY)
         self.source['barb'] = ColumnDataSource(data.EMPTY)
+        self.source['fronts'] = ColumnDataSource(data.EMPTY)
 
         #self.source['text_stamp'] = {}
         self.starting_colour = "black"  # in CSS-type spec
@@ -272,29 +274,30 @@ class BARC:
 
         return tool4
 
-    def weatherFront(self, figure, fid: int):
+    def weatherFront(self):
         '''
         The weatherfront function of barc
 
         Arguments:
-            Figure - bokeh figure
-            fid (int) - figure index / order
 
         Returns:
             List of custom toolbar elements
         '''
+        render_lines = []
+        for figure in self.figures:
+            render_lines.extend([
+            #order matters! Typescript assumes multiline, bézier, text_stamp
+            figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts']),
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[])), line_color="#d95f02", line_width=2),
+            figure.text_stamp(x='x', y='y', angle='angle', color="red", text=value('▲'), source=ColumnDataSource(data=dict(x=[], y=[], angle=[])))
+            ])
 
-        # function to update plot ranges in js
-        figure.x_range.js_on_change('start', front.range_change(figure, fid))
+        frontTool = FrontDrawTool(
+            renderers=render_lines,
+            tags=['barcfronts'],
+        )
 
-        # add draw items to toolbar
-        toolbars = []
-        for front_type in 'warm cold occluded stationary'.split():
-            fronttool = front.front(self, figure, front_type, fid)
-            fronttool.tags = ['barc' + front_type + 'front']
-            toolbars.append(fronttool)
-
-        return toolbars  # Toolbar(tools = toolbars)
+        return frontTool
 
     def display_glyphs(self):
         """Displays the selected glyph buttons
@@ -343,22 +346,23 @@ class BARC:
                 bokeh.models.tools.WheelZoomTool(tags=['barcwheelzoom']),
                 bokeh.models.tools.ResetTool(tags=['barcreset']),
                 bokeh.models.tools.BoxZoomTool(tags=['barcboxzoom']),
-                self.windBarb()
+                self.windBarb(),
+                self.weatherFront()
             )
 
             #q = time.monotonic()
             #figure.add_tools(*self.weatherFront(figure, i))
             #print(time.monotonic() - q, "s")
 
-            for glyph in self.allglyphs:
+            '''for glyph in self.allglyphs:
                 glyphtool = self.textStamp(chr(glyph))
                 barc_tools.append(glyphtool)
-            figure.add_tools(*barc_tools)
+            figure.add_tools(*barc_tools)'''
 
             toolBarList.append(
                 ToolbarBox(
                     toolbar=figure.toolbar,
-                    toolbar_location=None, visible=False,
+                    toolbar_location=None, visible=True,
                     css_classes=['barc_g%d' % i]
                 )
             )
@@ -376,7 +380,7 @@ class BARC:
             'reset': "undo",
             'windbarb': "windbarb",
             'coldfront': "cold",
-            'warmfront': "warm",
+            'warmfront': "fronts",
             'occludedfront': "occluded",
             'stationaryfront': "stationary",
         }
