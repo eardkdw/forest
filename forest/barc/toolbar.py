@@ -278,18 +278,17 @@ class BARC:
         '''
         The weatherfront function of barc
 
-        Arguments:
-
         Returns:
-            List of custom toolbar elements
+            FrontDrawTool instance.
         '''
         render_lines = []
         for figure in self.figures:
             render_lines.extend([
             #order matters! Typescript assumes multiline, bézier, text_stamp
             figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts']),
-            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[])), line_color="#d95f02", line_width=2),
-            figure.text_stamp(x='x', y='y', angle='angle', color="red", text=value('▲'), source=ColumnDataSource(data=dict(x=[], y=[], angle=[])))
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[])), line_color="black", line_width=2),
+            figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', color="red", text=value(chr(983430)), source=ColumnDataSource(data=dict(x=[], y=[], angle=[])))
+                
             ])
 
         frontTool = FrontDrawTool(

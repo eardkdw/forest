@@ -168,7 +168,7 @@ export class FrontDrawToolView extends PolyDrawToolView {
               const H = y0[beznumber]
 
               //calculate arc-length (approximately)
-              const segments = 20 //number of segments
+              const segments = 100 //number of segments
               let temp_x = []
               let temp_y = []
               let temp_l = [0]
@@ -183,7 +183,7 @@ export class FrontDrawToolView extends PolyDrawToolView {
                   }
               }
               const total_length = temp_l[temp_l.length-1]
-              const spacing = 1000
+              const spacing = (this.parent.model.x_range.end - this.parent.model.x_range.start)/20
 
               console.log('drawing text stamps over '+total_length)
               //draw points, text glyph at each one
