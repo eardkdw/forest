@@ -274,26 +274,40 @@ class BARC:
 
         return tool4
 
-    def weatherFront(self):
+    def weatherFront(self, name="warmfront", symbols=chr(983430), colour="red"):
         '''
         The weatherfront function of barc
 
+        Parameters:
+            name: String. Name of front type
+            symbols: text string or sequence of text strings
+            colour: colour or Palette (list of colours) 
+
         Returns:
-            FrontDrawTool instance.
+            FrontDrawTool instance
         '''
+        if not 'bezier' in self.source:
+            self.source['bezier'] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+        if not 'text'+name in self.source:
+            self.source['text'+name] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
         render_lines = []
         for figure in self.figures:
             render_lines.extend([
-            #order matters! Typescript assumes multiline, bézier, text_stamp
-            figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts']),
-            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[])), line_color="black", line_width=2),
-            figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', color="red", text=value(chr(983430)), source=ColumnDataSource(data=dict(x=[], y=[], angle=[])))
-                
+            #order matters! Typescript assumes multiline, bézier, text_stamp [, text_stamp, ...]
+            figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'], tags=['multiline']),
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'], line_color="black", line_width=2, tags=['bezier'])
             ])
-
+            for each in symbols:
+                if isinstance(colour, type([])):
+                    col = colour[symbols.index(each) % len(colour)]
+                else:
+                    col = colour
+                render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', color=value(col), text=value(each), source=self.source['text'+name], tags=['text_stamp']))
+                
+        print(['barc' +name, len(render_lines)])
         frontTool = FrontDrawTool(
             renderers=render_lines,
-            tags=['barcfronts'],
+            tags=['barc' + name],
         )
 
         return frontTool
@@ -346,22 +360,25 @@ class BARC:
                 bokeh.models.tools.ResetTool(tags=['barcreset']),
                 bokeh.models.tools.BoxZoomTool(tags=['barcboxzoom']),
                 self.windBarb(),
-                self.weatherFront()
+                self.weatherFront(),
+                self.weatherFront(name='coldfront', colour="blue", symbols=chr(983431)),
+                self.weatherFront(name='occludedfront', colour="purple", symbols=chr(983431)+chr(983430)),
+                self.weatherFront(name='stationaryfront', colour=['#0000ff','#ff0000'], symbols=chr(983431)+chr(983432))
             )
 
             #q = time.monotonic()
             #figure.add_tools(*self.weatherFront(figure, i))
             #print(time.monotonic() - q, "s")
 
-            '''for glyph in self.allglyphs:
+            for glyph in self.allglyphs:
                 glyphtool = self.textStamp(chr(glyph))
                 barc_tools.append(glyphtool)
-            figure.add_tools(*barc_tools)'''
+            figure.add_tools(*barc_tools)
 
             toolBarList.append(
                 ToolbarBox(
                     toolbar=figure.toolbar,
-                    toolbar_location=None, visible=True,
+                    toolbar_location=None, visible=False,
                     css_classes=['barc_g%d' % i]
                 )
             )
@@ -378,10 +395,10 @@ class BARC:
             'wheelzoom': "wheelzoom",
             'reset': "undo",
             'windbarb': "windbarb",
-            'coldfront': "cold",
-            'warmfront': "fronts",
-            'occludedfront': "occluded",
-            'stationaryfront': "stationary",
+            'coldfront': "coldfront",
+            'warmfront': "warmfront",
+            'occludedfront': "occludedfront",
+            'stationaryfront': "stationaryfront",
         }
         buttons = []
         for each in buttonspec:

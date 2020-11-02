@@ -1,6 +1,6 @@
 import bokeh.plotting
 import bokeh.models
-from bokeh.core.properties import DistanceSpec, StringSpec, ColorSpec, FontSizeSpec
+from bokeh.core.properties import DistanceSpec, StringSpec, Color, ColorSpec, FontSizeSpec, Seq, Either
 
 class TextStamp(bokeh.models.Text):
     __implementation__ = "text_stamp.ts"

@@ -153,8 +153,6 @@ export class FrontDrawToolView extends PolyDrawToolView {
 
 
               //draw text to fit curve
-              const ts = this.model.renderers[2]
-              const text_ds = ts.data_source
 
               //calculate coeffcients (per http://www.planetclegg.com/projects/WarpingTextToSplines.html x0=x0, x1=cx0, x2=cx1, x3=x1 etc.)
               const A = x1[beznumber] - 3*cx1[beznumber] + 3*cx0[beznumber] - x0[beznumber]
@@ -187,6 +185,9 @@ export class FrontDrawToolView extends PolyDrawToolView {
 
               console.log('drawing text stamps over '+total_length)
               //draw points, text glyph at each one
+              const ts = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("text_stamp") > -1); })
+              console.log(ts)
+              let order=0
               for(var i=0.0; i < total_length; i+=spacing)
               {
                   //i is target arc length
@@ -205,16 +206,20 @@ export class FrontDrawToolView extends PolyDrawToolView {
                      t= 1;
                   }
 
-                  console.log('Pushing')
-                  text_ds.get_array('x').push(A*t**3 + B*t**2 +C*t +D) //At³ + Bt² + Ct + D
-                  text_ds.get_array('y').push(E*t**3 + F*t**2 +G*t +H)
                   //calculate angle of text 
                   let dx = 3*A*t**2 + 2*B*t + C //derivatives of previous
                   let dy = 3*E*t**2 + 2*F*t + G
+
+                  let text_ds = ts[order % ts.length].data_source
+                  text_ds.get_array('x').push(A*t**3 + B*t**2 +C*t +D) //At³ + Bt² + Ct + D
+                  text_ds.get_array('y').push(E*t**3 + F*t**2 +G*t +H)
                   text_ds.get_array('angle').push(Math.atan2(dy,dx))
+                  order++;
               }
               //ts.data_source.data = text_ds.data
-              this._emit_cds_changes(text_ds, true, false, emit)
+              ts.forEach(function(t) {
+                t.data_source.change.emit()
+              } ) 
               
 
            }
