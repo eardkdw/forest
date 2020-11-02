@@ -1,6 +1,6 @@
 import bokeh.models
 
-import time
+from os.path import basename
 
 from bokeh.models import ColumnDataSource, Paragraph, Select
 from bokeh.models.glyphs import Text
@@ -274,40 +274,57 @@ class BARC:
 
         return tool4
 
-    def weatherFront(self, name="warmfront", symbols=chr(983430), colour="red"):
+    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom"):
         '''
-        The weatherfront function of barc
+        The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it. 
+
+        The colours correspond to the symbols; if there are fewer colours than symbols, it cycles back to the start. 
+        If there are more colours than symbols, then the excess are ignored.
+
+        Baselines work the same way.
+
+        Defaults correspond to a warm front.
 
         Parameters:
             name: String. Name of front type
+            colour: Valid bokeh ColorSpec or Palette (list of colours) 
             symbols: text string or sequence of text strings
-            colour: colour or Palette (list of colours) 
+            text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
 
         Returns:
             FrontDrawTool instance
         '''
-        if not 'bezier' in self.source:
-            self.source['bezier'] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+        if not 'bezier'+name in self.source:
+            self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
         if not 'text'+name in self.source:
-            self.source['text'+name] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
+            self.source['text'+name] = {}
+        if not 'fronts'+name in self.source:
+            self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
         render_lines = []
         for figure in self.figures:
             render_lines.extend([
             #order matters! Typescript assumes multiline, bézier, text_stamp [, text_stamp, ...]
-            figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'], tags=['multiline']),
-            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'], line_color="black", line_width=2, tags=['bezier'])
+            figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'+name], tags=['fronts'+name]),
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color="black", line_width=2, tags=['bezier'])
             ])
             for each in symbols:
+                if not each in self.source['text'+name]:
+                    self.source['text' + name][each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
                 if isinstance(colour, type([])):
                     col = colour[symbols.index(each) % len(colour)]
                 else:
                     col = colour
-                render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', color=value(col), text=value(each), source=self.source['text'+name], tags=['text_stamp']))
+                if isinstance(text_baseline, type([])):
+                    baseline = text_baseline[symbols.index(each) % len(colour)]
+                else:
+                    baseline = text_baseline
+                render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name][each], tags=['text_stamp']))
                 
         print(['barc' +name, len(render_lines)])
         frontTool = FrontDrawTool(
             renderers=render_lines,
             tags=['barc' + name],
+            custom_icon=__file__.replace(basename(__file__),'icons/%s.png' % (name,))
         )
 
         return frontTool
@@ -361,14 +378,10 @@ class BARC:
                 bokeh.models.tools.BoxZoomTool(tags=['barcboxzoom']),
                 self.windBarb(),
                 self.weatherFront(),
-                self.weatherFront(name='coldfront', colour="blue", symbols=chr(983431)),
-                self.weatherFront(name='occludedfront', colour="purple", symbols=chr(983431)+chr(983430)),
-                self.weatherFront(name='stationaryfront', colour=['#0000ff','#ff0000'], symbols=chr(983431)+chr(983432))
+                self.weatherFront(name='cold', colour="blue", symbols=chr(983430)),
+                self.weatherFront(name='occluded', colour="purple", symbols=chr(983431)+chr(983430)),
+                self.weatherFront(name='stationary', text_baseline=['bottom','top'], colour=['#ff0000','#0000ff'], symbols=chr(983431)+chr(983432))
             )
-
-            #q = time.monotonic()
-            #figure.add_tools(*self.weatherFront(figure, i))
-            #print(time.monotonic() - q, "s")
 
             for glyph in self.allglyphs:
                 glyphtool = self.textStamp(chr(glyph))
@@ -395,10 +408,10 @@ class BARC:
             'wheelzoom': "wheelzoom",
             'reset': "undo",
             'windbarb': "windbarb",
-            'coldfront': "coldfront",
-            'warmfront': "warmfront",
-            'occludedfront': "occludedfront",
-            'stationaryfront': "stationaryfront",
+            'cold': "cold",
+            'warm': "warm",
+            'occluded': "occluded",
+            'stationary': "stationary",
         }
         buttons = []
         for each in buttonspec:
