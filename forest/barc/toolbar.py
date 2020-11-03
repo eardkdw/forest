@@ -147,7 +147,7 @@ class BARC:
         '''
             Creates a freehand tool for drawing on the Forest maps.
 
-            :returns: a FreehandDrawTool instance
+            :returns: a :py:class:`FreehandDrawTool <bokeh.models.tools.FreehandDrawTool>` instance
         '''
         # colour picker means no longer have separate colour line options
         render_lines = []
@@ -192,8 +192,7 @@ class BARC:
 
         :param glyph: Arbitrary unicode string, usually (but not required to be) a single character.
 
-        returns:
-            PointDrawTool with textStamp functionality.
+        :returns: :py:class:`PointDrawTool <bokeh.models.tools.PointDrawTool>` with textStamp functionality.
         '''
         #render_text_stamp = self.figure.circle(x="xs",y="ys",legend_label="X", source=source);
         starting_font_size = 15  # in pixels
@@ -293,8 +292,7 @@ class BARC:
                      arbitrary length but long strings may produce undesirable results.
         :param text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
 
-        Returns:
-            FrontDrawTool instance
+        :returns: FrontDrawTool instance
         '''
         if not 'bezier'+name in self.source:
             self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
