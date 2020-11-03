@@ -285,11 +285,13 @@ class BARC:
 
         Defaults correspond to a warm front.
 
-        Parameters:
-            name: String. Name of front type
-            colour: Valid bokeh ColorSpec or Palette (list of colours) 
-            symbols: text string or sequence of text strings
-            text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
+        :param name: String. Name of front type
+        :param colour: Valid Bokeh ColorSpec or Palette (list of colours) 
+        :param symbols: Unicode text string or sequence of Unicode text strings. If it is a string with length > 1, 
+                     the individual characters are spaced out, repeating as necessary. If it is a sequence, 
+                     each one is treated as a "character", and spaced in the same way. They can be of
+                     arbitrary length but long strings may produce undesirable results.
+        :param text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
 
         Returns:
             FrontDrawTool instance
@@ -380,7 +382,7 @@ class BARC:
                 self.weatherFront(),
                 self.weatherFront(name='cold', colour="blue", symbols=chr(983430)),
                 self.weatherFront(name='occluded', colour="purple", symbols=chr(983431)+chr(983430)),
-                self.weatherFront(name='stationary', text_baseline=['bottom','top'], colour=['#ff0000','#0000ff'], symbols=chr(983431)+chr(983432))
+                self.weatherFront(name='stationary', text_baseline=['bottom','top'], colour=['#ff0000','#0000ff'], symbols=chr(983431)+chr(983432)),
             )
 
             for glyph in self.allglyphs:
