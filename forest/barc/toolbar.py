@@ -17,7 +17,7 @@ class BARC:
     '''
      A class for the BARC features.
 
-     It is attached to to the main FOREST instance in the `main` function of `forest/main.py`.
+     It is attached to to the main FOREST instance in the :py:func:`forest.main.main()` function of :py:mod:`forest.main`.
     '''
     barcTools = None
     source = {}
@@ -292,7 +292,7 @@ class BARC:
                      arbitrary length but long strings may produce undesirable results.
         :param text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
 
-        :returns: FrontDrawTool instance
+        :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
         '''
         if not 'bezier'+name in self.source:
             self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
