@@ -166,11 +166,11 @@ export class FrontDrawToolView extends PolyDrawToolView {
               const H = y0[beznumber]
 
               //calculate arc-length (approximately)
-              const segments = 100 //number of segments
+              const segments = 200 //number of segments
               let temp_x = []
               let temp_y = []
               let temp_l = [0]
-              console.log('Calculating text stamp locations with ' +segments+' segments')
+              //Calculating text stamp locations with ' +segments+' segments')
               for(var i=0; i < segments; i+=1)
               {
                   let t = i/segments
@@ -181,9 +181,9 @@ export class FrontDrawToolView extends PolyDrawToolView {
                   }
               }
               const total_length = temp_l[temp_l.length-1]
-              const spacing = (this.parent.model.x_range.end - this.parent.model.x_range.start)/20
+              const spacing = (this.parent.model.y_range.end - this.parent.model.y_range.start)/100
 
-              console.log('drawing text stamps over '+total_length)
+              //drawing text stamps over '+total_length
               //draw points, text glyph at each one
               const ts = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("text_stamp") > -1); })
               console.log(ts)

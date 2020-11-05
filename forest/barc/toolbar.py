@@ -294,12 +294,9 @@ class BARC:
 
         :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
         '''
-        if not 'bezier'+name in self.source:
-            self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
-        if not 'text'+name in self.source:
-            self.source['text'+name] = {}
-        if not 'fronts'+name in self.source:
-            self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
+        self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+        self.source['text'+name] = {}
+        self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
         render_lines = []
         for figure in self.figures:
             render_lines.extend([
@@ -308,8 +305,7 @@ class BARC:
             figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color="black", line_width=2, tags=['bezier'])
             ])
             for each in symbols:
-                if not each in self.source['text'+name]:
-                    self.source['text' + name][each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
+                self.source['text' + name][each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
                 if isinstance(colour, type([])):
                     col = colour[symbols.index(each) % len(colour)]
                 else:
@@ -320,7 +316,6 @@ class BARC:
                     baseline = text_baseline
                 render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name][each], tags=['text_stamp']))
                 
-        print(['barc' +name, len(render_lines)])
         frontTool = FrontDrawTool(
             renderers=render_lines,
             tags=['barc' + name],
@@ -380,6 +375,7 @@ class BARC:
                 self.weatherFront(),
                 self.weatherFront(name='cold', colour="blue", symbols=chr(983430)),
                 self.weatherFront(name='occluded', colour="purple", symbols=chr(983431)+chr(983430)),
+                self.weatherFront(name='dryintrusion', colour="#0000aa", symbols='▮'),
                 self.weatherFront(name='stationary', text_baseline=['bottom','top'], colour=['#ff0000','#0000ff'], symbols=chr(983431)+chr(983432)),
             )
 
@@ -412,6 +408,7 @@ class BARC:
             'warm': "warm",
             'occluded': "occluded",
             'stationary': "stationary",
+            'dryintrusion': "dryintrusion",
         }
         buttons = []
         for each in buttonspec:
