@@ -544,14 +544,8 @@ class BARC:
             'poly_edit': 'poly_edit',
             'textbox': 'textbox',
         }
-        buttonsubspec1 = {
-
-            'freehand': "freehand",
-            'poly_draw': 'poly_draw',
-            'poly_edit': 'poly_edit',
-            'textbox': 'textbox',
-        }
-        buttons1 = []
+        
+        buttons = []
         for each in buttonspec1:
             button = bokeh.models.widgets.Button(
                 label=buttonspec1[each],
@@ -560,15 +554,14 @@ class BARC:
                 aspect_ratio=1,
                 margin=(0, 0, 0, 0)
             )
-            if each in buttonsubspec1:
-                button.js_on_event(ButtonClick,
-                bokeh.models.CustomJS(args=dict(
-                buttons=list(toolBarBoxes.select({'tags': ['barc' + each]}))),
-                code="""
+            button.js_on_event(ButtonClick,
+            bokeh.models.CustomJS(args=dict(
+            buttons=list(toolBarBoxes.select({'tags': ['barc' + each]}))),
+            code="""
                     var each;
                     for(each of buttons) { each.active = true; }
                     """))
-            buttons1.append(button)
+            buttons.append(button)
 
         buttonspec2 = {
             'windbarb': "windbarb",
@@ -593,7 +586,7 @@ class BARC:
             """))
             buttons2.append(button)
 
-        self.barcTools.children.append(bokeh.layouts.grid(buttons1, ncols=7))
+        self.barcTools.children.append(bokeh.layouts.grid(buttons, ncols=7))
         self.barcTools.children.append(bokeh.layouts.grid(buttons2, ncols=5))
         self.glyphrow = bokeh.layouts.grid(self.display_glyphs(), ncols=5)
         self.barcTools.children.append(self.glyphrow)
