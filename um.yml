@@ -1,0 +1,8 @@
+files:
+    - label: UM
+      pattern: /data/barc/SEA/*.nc 
+      file_type: unified_model
+features:
+    time_series: true  
+    profile: true
+    BARC: true

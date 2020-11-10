@@ -1,0 +1,8 @@
+files:
+    - label: um
+      pattern: /data/barc/SEA/20180915T0000Z_SEA4*
+      file_type: unified_model
+features:
+    time_series: false
+    profile: false
+    BARC: true

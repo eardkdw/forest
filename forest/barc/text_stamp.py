@@ -5,8 +5,8 @@ from bokeh.core.properties import DistanceSpec, StringSpec, ColorSpec, FontSizeS
 class TextStamp(bokeh.models.Text):
     __implementation__ = "text_stamp.ts"
     _args = ('value', 'colour', 'fontsize')
-    x = DistanceSpec(units_default="screen")
-    y = DistanceSpec(units_default="screen")
+    #x = DistanceSpec(units_default="screen")
+    #y = DistanceSpec(units_default="screen")
     value = StringSpec(default="🌧")
     font = 'BARC'
     colour = ColorSpec(default="fuchsia")
