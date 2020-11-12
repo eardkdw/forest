@@ -91,6 +91,9 @@ export class FrontDrawToolView extends PolyDrawToolView {
             }
          }
       }*/
+      if(xkey && ykey) {
+        this._drawFront(mode)
+      }
     } else if (mode == 'add') {
       if (xkey) {
         const xidx = cds.data[xkey].length-1
@@ -139,11 +142,10 @@ export class FrontDrawToolView extends PolyDrawToolView {
     if(mode =="add") {
         offset = 1;
     }
-    const xlen = cds.data[xkey][xidx].length
-    if(xlen > 3 + offset)
+    const xlen = cds.data[xkey][xidx].length - offset
+    if(xlen > 3)
     {
-       console.log(xlen -1)
-       if(xlen-1 ==4 || (xlen-(1+offset)) % 3 == 0)
+       if(xlen ==4 || (xlen-1) % 3 == 0 || (!this._drawing && xlen % 3 == 0) ) //last clause should catch closing double-taps
        {
           //xs and ys are one longer than in the 'edit' stanza
           const xs = cds.data[xkey][cds.data[xkey].length-1]
@@ -157,9 +159,8 @@ export class FrontDrawToolView extends PolyDrawToolView {
           const x1 = bez_ds.get_array<number>(x1key)
           const y1 = bez_ds.get_array<number>(y1key)
          
-        for(var i=0; i < ((xlen-(1+offset))/3); i+=1) {
-          const beznumber = ((xlen-(1+offset))/3)-1 //0,1,2,...
-          console.log(beznumber)
+        for(var i=0; i < (xlen/3); i+=1) {
+          const beznumber = Math.floor((xlen/3) - 1) //integer. using Floor because xlen=4 for the first one.
           x0[beznumber] = xs[3*beznumber +0]
           y0[beznumber] = ys[3*beznumber +0]
           cx0[beznumber] = xs[3*beznumber +1]
@@ -168,18 +169,9 @@ export class FrontDrawToolView extends PolyDrawToolView {
           cy1[beznumber] = ys[3*beznumber +2]
           x1[beznumber] = xs[3*beznumber +3]
           y1[beznumber] = ys[3*beznumber +3]
-          //add blank entry
-          /*x0.push(NaN)
-          y0.push(NaN)
-          cx0.push(NaN)
-          cy0.push(NaN)
-          cx1.push(NaN)
-          cy1.push(NaN)
-          x1.push(NaN)
-          y1.push(NaN)*/
-
 
           //draw text to fit curve
+          if(mode == "add" || this._drawing == false) {
 
           //calculate coeffcients (per http://www.planetclegg.com/projects/WarpingTextToSplines.html x0=x0, x1=cx0, x2=cx1, x3=x1 etc.)
           const A = x1[beznumber] - 3*cx1[beznumber] + 3*cx0[beznumber] - x0[beznumber]
@@ -246,7 +238,7 @@ export class FrontDrawToolView extends PolyDrawToolView {
           ts.forEach(function(t) {
             t.data_source.change.emit()
           } ) 
-          
+         } 
         }
        }
      }
