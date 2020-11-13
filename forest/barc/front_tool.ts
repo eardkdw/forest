@@ -61,36 +61,6 @@ export class FrontDrawToolView extends PolyDrawToolView {
         const ys = cds.data[ykey][cds.data[ykey].length-1]
         ys[ys.length-1] = y
       }
-      /*if(xkey && ykey)
-      {
-        //Update Beziér curve
-        const xidx = cds.data[xkey].length-1
-        if(cds.data[xkey][xidx].length > 3)
-        {
-           if((cds.data[xkey][xidx].length-1) % 3 == 0)
-           {
-              const xs = cds.data[xkey][cds.data[xkey].length-1]
-              const ys = cds.data[ykey][cds.data[ykey].length-1]
-              const x0 = bez_ds.data[x0key]
-              const y0 = bez_ds.data[y0key]
-              const cx0 = bez_ds.data[cx0key]
-              const cy0 = bez_ds.data[cy0key]
-              const cx1 = bez_ds.data[cx1key]
-              const cy1 = bez_ds.data[cy1key]
-              const x1 = bez_ds.data[x1key]
-              const y1 = bez_ds.data[y1key]
-              const beznumber = x0.length-1
-              x0[beznumber] = xs[xs.length-4]
-              y0[beznumber] = ys[ys.length-4]
-              cx0[beznumber] = xs[xs.length-3]
-              cy0[beznumber] = ys[ys.length-3]
-              cx1[beznumber] = xs[xs.length-2]
-              cy1[beznumber] = ys[ys.length-2]
-              x1[beznumber] = xs[xs.length-1]
-              y1[beznumber] = ys[ys.length-1]
-            }
-         }
-      }*/
       if(xkey && ykey) {
         this._drawFront(mode)
       }
@@ -171,7 +141,7 @@ export class FrontDrawToolView extends PolyDrawToolView {
           y1[beznumber] = ys[3*beznumber +3]
 
           //draw text to fit curve
-          if(mode == "add" || this._drawing == false) {
+          if(mode == "add" || this._drawing == false) { //a new point has been added *or* editing has ended
 
           //calculate coeffcients (per http://www.planetclegg.com/projects/WarpingTextToSplines.html x0=x0, x1=cx0, x2=cx1, x3=x1 etc.)
           const A = x1[beznumber] - 3*cx1[beznumber] + 3*cx0[beznumber] - x0[beznumber]
@@ -200,12 +170,17 @@ export class FrontDrawToolView extends PolyDrawToolView {
               }
           }
           const total_length = temp_l[temp_l.length-1]
-          const spacing = (this.parent.model.y_range.end - this.parent.model.y_range.start)/100
+          const spacing = (this.parent.model.y_range.end - this.parent.model.y_range.start)/50
 
           //drawing text stamps over '+total_length
           //draw points, text glyph at each one
           const ts = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("text_stamp") > -1); })
+          //how many figures?
+          const figlist = new Set([].concat.apply([],(ts.map(a => a.glyph.tags))).filter(function(tag: string) { return tag.startsWith("fig"); })) //list of figure tags
+          console.log(figlist)
+          figlist.forEach(function(figtag: string) { 
           let order=0
+          const ts_fig = ts.filter(function(element) { return (element.glyph.tags.indexOf(figtag) > -1); })
           for(var i=0.0; i < total_length; i+=spacing)
           {
               //i is target arc length
@@ -228,16 +203,18 @@ export class FrontDrawToolView extends PolyDrawToolView {
               let dx = 3*A*t**2 + 2*B*t + C //derivatives of previous
               let dy = 3*E*t**2 + 2*F*t + G
 
-              let text_ds = ts[order % ts.length].data_source
+              let text_ds = ts_fig[order % ts_fig.length].data_source
               text_ds.get_array('x').push(A*t**3 + B*t**2 +C*t +D) //At³ + Bt² + Ct + D
               text_ds.get_array('y').push(E*t**3 + F*t**2 +G*t +H)
               text_ds.get_array('angle').push(Math.atan2(dy,dx))
               order++;
           }
           //ts.data_source.data = text_ds.data
-          ts.forEach(function(t) {
+          console.log(ts_fig)
+          ts_fig.forEach(function(t) {
             t.data_source.change.emit()
           } ) 
+          })
          } 
         }
        }
