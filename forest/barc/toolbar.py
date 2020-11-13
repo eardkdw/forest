@@ -245,19 +245,19 @@ class BARC:
     def polyDraw(self):
         '''
             Creates a poly draw tool for drawing on the Forest maps.
-
             :returns: a PolyDrawTool instance
         '''
         # colour picker means no longer have separate colour line options
         render_lines = []
         self.source['poly_draw'].add([], "colour")
+        self.source['poly_draw'].add([], "width")
         for figure in self.figures:
             render_lines.append(figure.patches(
                 xs='xs',
                 ys='ys',
+                color="colour",
                 source=self.source['poly_draw'],
                 alpha=0.3,
-                color="colour",
                 level="overlay")
             )
 
@@ -267,9 +267,7 @@ class BARC:
             name="barcpoly_draw"
         )
         self.source['poly_draw'].js_on_change('data',
-            bokeh.models.CustomJS(args=dict(datasource=self.source['poly_draw'],
-            colourPicker=self.colourPicker, widthPicker=self.widthPicker,
-            saveArea=self.saveArea, sources=self.source), code="""
+                                             bokeh.models.CustomJS(args=dict(datasource=self.source['poly_draw'], colourPicker=self.colourPicker, widthPicker=self.widthPicker, saveArea=self.saveArea, sources=self.source), code="""
                 for(var g = 0; g < datasource.data['colour'].length; g++)
                 {
                     if(!datasource.data['colour'][g])
@@ -282,7 +280,7 @@ class BARC:
                     }
                 }
                 """)
-                                              )
+                                             )
 
         return tool2
 
@@ -315,16 +313,15 @@ class BARC:
     def boxEdit(self):
         '''
             Creates a box edit tool for drawing on the Forest maps.
-
             :returns: a BoxEditTool instance
         '''
-        # Not functional yet
         render_lines = []
         self.source['box_edit'].add([], "colour")
+        self.source['box_edit'].add([], "width")
         for figure in self.figures:
-            render_lines.append(figure.rect(
-                x='xs',
-                y='ys',
+            render_lines.append(figure.patches(
+                xs='xs',
+                ys='ys',
                 source=self.source['box_edit'],
                 alpha=0.3,
                 color="colour",
@@ -337,16 +334,17 @@ class BARC:
             name="barcbox_edit"
         )
         self.source['box_edit'].js_on_change('data',
-             bokeh.models.CustomJS(args=dict(datasource=self.source['box_edit'],
-             colourPicker=self.colourPicker, saveArea=self.saveArea,
-             sources=self.source), code="""
+                                             bokeh.models.CustomJS(args=dict(datasource=self.source['box_edit'], colourPicker=self.colourPicker, saveArea=self.saveArea, sources=self.source), code="""
                 for(var g = 0; g < datasource.data['colour'].length; g++)
                 {
                     if(!datasource.data['colour'][g])
                     {
                         datasource.data['colour'][g] = colourPicker.color;
                     }
-
+                    if(!datasource.data['width'][g])
+                    {
+                        datasource.data['width'][g] = widthPicker.value;
+                    }
                 }
                 """)
                                              )
@@ -504,13 +502,14 @@ class BARC:
             figure.add_tools(
                 bokeh.models.tools.UndoTool(tags=['barcundo']),
                 bokeh.models.tools.RedoTool(tags=['barcredo']),
-                bokeh.models.tools.ZoomInTool(tags=['barczoom_in']),
-                bokeh.models.tools.ZoomOutTool(tags=['barczoom_out']),
+                bokeh.models.tools.ZoomInTool(dimensions="both",tags=['barczoom_in']),
+                bokeh.models.tools.ZoomOutTool(dimensions="both",tags=['barczoom_out']),
                 bokeh.models.tools.PanTool(tags=['barcpan']),
                 bokeh.models.tools.WheelZoomTool(tags=['barcwheelzoom']),
                 bokeh.models.tools.BoxZoomTool(tags=['barcboxzoom']),
+                bokeh.models.tools.BoxSelectTool(tags=['barcbox_edit']),
                 bokeh.models.tools.ResetTool(tags=['barcreset']),
-                self.boxEdit(),
+                bokeh.models.tools.TapTool(tags=['barcreset']),
                 self.polyLine(),
                 self.polyDraw(),
                 self.windBarb()
@@ -539,8 +538,9 @@ class BARC:
             'pan': "move",
             'boxzoom': "boxzoom",
             'wheelzoom': "wheelzoom",
-            'reset': 'reset',
             'box_edit': 'box_edit',
+            'reset': 'reset',
+            'taptool': 'taptool',
             'freehand': "freehand",
             'poly_draw': 'poly_draw',
             'poly_edit': 'poly_edit',
@@ -556,6 +556,7 @@ class BARC:
                 aspect_ratio=1,
                 margin=(0, 0, 0, 0)
             )
+            print('barc' + each)
             button.js_on_event(ButtonClick,
             bokeh.models.CustomJS(args=dict(
             buttons=list(toolBarBoxes.select({'tags': ['barc' + each]}))),
