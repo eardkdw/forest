@@ -273,7 +273,7 @@ class BARC:
 
         return tool4
 
-    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom"):
+    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black"):
         '''
         The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it. 
 
@@ -295,14 +295,16 @@ class BARC:
         :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
         '''
         self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+        self.source['bezier2'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
         self.source['text'+name] = {}
         self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
         render_lines = []
         for figure in self.figures:
             render_lines.extend([
             #order matters! Typescript assumes multiline, bézier, text_stamp [, text_stamp, ...]
-            figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'+name], tags=['fronts'+name]),
-            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color="black", line_width=2, tags=['bezier'])
+            figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'+name], tags=['multiline']),
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color=line_colour, line_width=2, tags=['bezier']),
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier2'+name], line_color="#00aaff", line_width=2, tags=['bezier'])
             ])
             for each in symbols:
                 self.source['text' + name][each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
@@ -314,7 +316,7 @@ class BARC:
                     baseline = text_baseline[symbols.index(each) % len(colour)]
                 else:
                     baseline = text_baseline
-                render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name][each], tags=['text_stamp']))
+                render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name][each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
                 
         frontTool = FrontDrawTool(
             renderers=render_lines,
@@ -375,7 +377,7 @@ class BARC:
                 self.weatherFront(),
                 self.weatherFront(name='cold', colour="blue", symbols=chr(983430)),
                 self.weatherFront(name='occluded', colour="purple", symbols=chr(983431)+chr(983430)),
-                self.weatherFront(name='dryintrusion', colour="#0000aa", symbols='▮'),
+                self.weatherFront(name='dryintrusion', colour="#00AAFF", line_colour="#00AAFF", symbols='▮'),
                 self.weatherFront(name='stationary', text_baseline=['bottom','top'], colour=['#ff0000','#0000ff'], symbols=chr(983431)+chr(983432)),
             )
 
