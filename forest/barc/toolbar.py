@@ -29,21 +29,26 @@ This module provides a :class:`BARC` to enable the Barc Tool Bar
 
 """
 import bokeh.models
-from bokeh.models import ColumnDataSource, Select
+
+from os.path import basename
+
+from bokeh.models import ColumnDataSource, Paragraph, Select
+from bokeh.models.glyphs import Text
 from bokeh.core.properties import value
 from bokeh.models.tools import PolyDrawTool, PolyEditTool, BoxEditTool
 from bokeh.models.tools import PointDrawTool, ToolbarBox, FreehandDrawTool
 from bokeh.events import ButtonClick
-from forest import wind, data, tools # tools must be loaded
-from . import front
+from forest import wind, data, tools, redux
+import forest.middlewares as mws
+#from . import front
+from .front_tool import FrontDrawTool
 
 
 class BARC:
     '''
      A class for the BARC features.
 
-     It is attached to to the main FOREST instance in the `main` function of
-     `forest/main.py`.
+     It is attached to to the main FOREST instance in the :py:func:`forest.main.main()` function of :py:mod:`forest.main`.
     '''
     barcTools = None
     source = {}
@@ -57,6 +62,7 @@ class BARC:
         self.source['poly_draw'] = ColumnDataSource(data.EMPTY)
         self.source['box_edit'] = ColumnDataSource(data.EMPTY)
         self.source['barb'] = ColumnDataSource(data.EMPTY)
+        self.source['fronts'] = ColumnDataSource(data.EMPTY)
         # set intial width and colours
         self.starting_colour = "black"  # in CSS-type spec
         self.starting_width = 2
@@ -199,7 +205,7 @@ class BARC:
         '''
             Creates a freehand tool for drawing on the Forest maps.
 
-            :returns: a FreehandDrawTool instance
+            :returns: a :py:class:`FreehandDrawTool <bokeh.models.tools.FreehandDrawTool>` instance
         '''
         # colour picker means no longer have separate colour line options
         render_lines = []
@@ -356,8 +362,7 @@ class BARC:
 
         :param glyph: Arbitrary unicode string, usually (but not required to be) a single character.
 
-        returns:
-            PointDrawTool with textStamp functionality.
+        :returns: :py:class:`PointDrawTool <bokeh.models.tools.PointDrawTool>` with textStamp functionality.
         '''
 
         starting_font_size = 15  # in pixels
@@ -439,29 +444,58 @@ class BARC:
 
         return tool4
 
-    def weatherFront(self, figure, fid: int):
+    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black"):
         '''
-        The weatherfront function of barc
+        The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it. 
 
-        Arguments:
-            Figure - bokeh figure
-            fid (int) - figure index / order
+        The colours correspond to the symbols; if there are fewer colours than symbols, it cycles back to the start. 
+        If there are more colours than symbols, then the excess are ignored.
 
-        Returns:
-            List of custom toolbar elements
+        Baselines work the same way.
+
+        Defaults correspond to a warm front.
+
+        :param name: String. Name of front type
+        :param colour: Valid Bokeh ColorSpec or Palette (list of colours) 
+        :param symbols: Unicode text string or sequence of Unicode text strings. If it is a string with length > 1, 
+                     the individual characters are spaced out, repeating as necessary. If it is a sequence, 
+                     each one is treated as a "character", and spaced in the same way. They can be of
+                     arbitrary length but long strings may produce undesirable results.
+        :param text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
+
+        :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
         '''
+        self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+        self.source['bezier2'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+        self.source['text'+name] = {}
+        self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
+        render_lines = []
+        for figure in self.figures:
+            render_lines.extend([
+            #order matters! Typescript assumes multiline, bézier, text_stamp [, text_stamp, ...]
+            figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'+name], tags=['multiline']),
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color=line_colour, line_width=2, tags=['bezier']),
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier2'+name], line_color="#00aaff", line_width=2, tags=['bezier'])
+            ])
+            for each in symbols:
+                self.source['text' + name][each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
+                if isinstance(colour, type([])):
+                    col = colour[symbols.index(each) % len(colour)]
+                else:
+                    col = colour
+                if isinstance(text_baseline, type([])):
+                    baseline = text_baseline[symbols.index(each) % len(colour)]
+                else:
+                    baseline = text_baseline
+                render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name][each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
+                
+        frontTool = FrontDrawTool(
+            renderers=render_lines,
+            tags=['barc' + name],
+            custom_icon=__file__.replace(basename(__file__),'icons/%s.png' % (name,))
+        )
 
-        # function to update plot ranges in js
-        figure.x_range.js_on_change('start', front.range_change(figure, fid))
-
-        # add draw items to toolbar
-        toolbars = []
-        for front_type in 'warm cold occluded stationary'.split():
-            fronttool = front.front(self, figure, front_type, fid)
-            fronttool.tags = ['barc' + front_type + 'front']
-            toolbars.append(fronttool)
-
-        return toolbars  # Toolbar(tools = toolbars)
+        return frontTool
 
     def display_glyphs(self):
         """Displays the selected glyph buttons
@@ -511,7 +545,12 @@ class BARC:
                 self.boxEdit(),
                 self.polyLine(),
                 self.polyDraw(),
-                self.windBarb()
+                self.windBarb(),
+                self.weatherFront(),
+                self.weatherFront(name='cold', colour="blue", symbols=chr(983430)),
+                self.weatherFront(name='occluded', colour="purple", symbols=chr(983431)+chr(983430)),
+                self.weatherFront(name='dryintrusion', colour="#00AAFF", line_colour="#00AAFF", symbols='▮'),
+                self.weatherFront(name='stationary', text_baseline=['bottom','top'], colour=['#ff0000','#0000ff'], symbols=chr(983431)+chr(983432)),
             )
 
             for glyph in self.allglyphs:
@@ -572,10 +611,11 @@ class BARC:
 
         buttonspec2 = {
             'windbarb': "windbarb",
-            'coldfront': "cold",
-            'warmfront': "warm",
-            'occludedfront': "occluded",
-            'stationaryfront': "stationary",
+            'cold': "cold",
+            'warm': "warm",
+            'occluded': "occluded",
+            'stationary': "stationary",
+            'dryintrusion': "dryintrusion",
         }
         buttons2 = []
         for each in buttonspec2:
