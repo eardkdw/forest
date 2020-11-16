@@ -14,7 +14,7 @@ The Bokeh Annotation and Reporting Component (BARC) is a component integrated in
 
 ## Documentation
 
-Please read the [docs](https://barc-docs.readthedocs.io/en/latest/)This includes user documentation, developer guides and api references. They are a work in progress but should
+Please read the [docs](https://barc-docs.readthedocs.io/en/latest/) This includes user documentation, developer guides and api references. They are a work in progress but should
 quickly become an invaluable resource over time.
 
 ## Get in touch
