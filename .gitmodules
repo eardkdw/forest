@@ -1,3 +1,6 @@
 [submodule "forest/barc/barc-font"]
 	path = forest/barc/barc-font
 	url = https://github.com/lecjlg/barc-font
+[submodule "forest/barc/barc-docs"]
+	path = forest/barc/barc-docs
+	url = ssh://git@github.com/lecjlg/barc-docs
