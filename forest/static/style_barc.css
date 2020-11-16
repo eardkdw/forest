@@ -719,6 +719,10 @@ root .bk-toolbar, .bk-root .bk-toolbar * {
   width; 400px
 }
 
+.bk-root .bk-input-group {
+  display: flex;
+  width: 350px
+}
 /* BARC Font */
 @font-face {
   font-family: BARC;
