@@ -446,9 +446,9 @@ class BARC:
 
     def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black"):
         '''
-        The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it. 
+        The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it.
 
-        The colours correspond to the symbols; if there are fewer colours than symbols, it cycles back to the start. 
+        The colours correspond to the symbols; if there are fewer colours than symbols, it cycles back to the start.
         If there are more colours than symbols, then the excess are ignored.
 
         Baselines work the same way.
@@ -456,9 +456,9 @@ class BARC:
         Defaults correspond to a warm front.
 
         :param name: String. Name of front type
-        :param colour: Valid Bokeh ColorSpec or Palette (list of colours) 
-        :param symbols: Unicode text string or sequence of Unicode text strings. If it is a string with length > 1, 
-                     the individual characters are spaced out, repeating as necessary. If it is a sequence, 
+        :param colour: Valid Bokeh ColorSpec or Palette (list of colours)
+        :param symbols: Unicode text string or sequence of Unicode text strings. If it is a string with length > 1,
+                     the individual characters are spaced out, repeating as necessary. If it is a sequence,
                      each one is treated as a "character", and spaced in the same way. They can be of
                      arbitrary length but long strings may produce undesirable results.
         :param text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
@@ -488,7 +488,7 @@ class BARC:
                 else:
                     baseline = text_baseline
                 render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name][each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
-                
+
         frontTool = FrontDrawTool(
             renderers=render_lines,
             tags=['barc' + name],
@@ -579,7 +579,7 @@ class BARC:
             'wheelzoom': "wheelzoom",
             'box_edit': 'box_edit',
             'reset': 'reset',
-            'taptool': 'taptool',
+            'taptool;': 'tap',
             'freehand': "freehand",
             'poly_draw': 'poly_draw',
             'poly_edit': 'poly_edit',
@@ -595,7 +595,6 @@ class BARC:
                 aspect_ratio=1,
                 margin=(0, 0, 0, 0)
             )
-            print('barc' + each)
             button.js_on_event(ButtonClick,
             bokeh.models.CustomJS(args=dict(
             buttons=list(toolBarBoxes.select({'tags': ['barc' + each]}))),
