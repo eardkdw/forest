@@ -14,8 +14,8 @@ The Bokeh Annotation and Reporting Component (BARC) is a component integrated in
 
 ## Documentation
 
-Please read the [docs](https://barc-docs.readthedocs.io/en/latest/) This includes user documentation, developer guides and api references. They are a work in progress but should
-quickly become an invaluable resource over time.
+Please read the [docs](https://barc-docs.readthedocs.io/en/latest/) 
+These are a work in progress but include user documentation, developer guides and api references. Hopfully these will become an invaluable resource for getting up and running with BARC.
 
 ## Get in touch
 BARC has been developed by a small team of Developers, but we are keen to hear from you with your suggestions for improvements. If you have suggestions for improvements, bugs that need reporting feel free to open/comment on [issues](https://github.com/cemac/forest-barc/issues).
