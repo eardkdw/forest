@@ -1,7 +1,7 @@
 <h1 align="center">
   <a href="https://barc-docs.readthedocs.io/en/latest/" style="display: block; margin: 0 auto;">
    <img src="https://github.com/cemac/forest-barc/blob/master/forest/barc/icons/barclogo.png"
-        style="max-width: 40%;" alt="FOREST"></a>
+        style="max-width: 40%;" alt="BARC logo"></a>
 </h1>
 
 <span><strong>BARC - </strong> 
@@ -12,11 +12,11 @@ The Bokeh Annotation and Reporting Component (BARC) is a component integrated in
 
 ## Documentation
 
-Please read the [docs](https://barc-docs.readthedocs.io/en/latest/), include user documentation, developer guides and api references. They are a work in progress but should
+Please read the [docs](https://barc-docs.readthedocs.io/en/latest/)This includes user documentation, developer guides and api references. They are a work in progress but should
 quickly become an invaluable resource over time.
 
 ## Get in touch
-BARC has been developed by a small team of Developers, but we are keek to hear from you with your suggestions for improvements.If you have suggestions for improvements, bugs that need reporting feel free to open/comment on [issues](https://github.com/cemac/forest-barc/issues).
+BARC has been developed by a small team of Developers, but we are keen to hear from you with your suggestions for improvements. If you have suggestions for improvements, bugs that need reporting feel free to open/comment on [issues](https://github.com/cemac/forest-barc/issues).
 
 ## License
 
