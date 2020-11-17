@@ -629,7 +629,7 @@ class BARC:
             buttons2.append(button)
 
         self.barcTools.children.append(bokeh.layouts.grid(buttons, ncols=7))
-        self.barcTools.children.append(bokeh.layouts.grid(buttons2, ncols=5))
+        self.barcTools.children.append(bokeh.layouts.grid(buttons2, ncols=6))
         self.glyphrow = bokeh.layouts.grid(self.display_glyphs(), ncols=5)
         self.barcTools.children.append(self.glyphrow)
         self.barcTools.children.extend([self.dropDown])
