@@ -105,9 +105,9 @@ def main(argv=None):
         datasets[group.label] = dataset
         datasets_by_pattern[group.pattern] = dataset
         label_to_pattern[group.label] = group.pattern
-        
-        
-        
+
+
+
     # print('\n\n\n\n', datasets, '\n\n\n\n')
 
     '''# Lakes
@@ -256,7 +256,7 @@ def main(argv=None):
         tile_picker = forest.components.TilePicker()
         for figure in figures:
             tile_picker.add_figure(figure)
-            
+
         tile_picker.connect(store)
 
     if not data.FEATURE_FLAGS["multiple_colorbars"]:
@@ -451,22 +451,44 @@ class Navbar:
         key = "diagrams_button"
         self.buttons[key] = bokeh.models.Button(
             label = '',# label="Diagrams",# now contains the barc logo
-            css_classes=["float-right",'barc_btn'],
+            css_classes=["float-right"],
             name=key)
-            
+
         custom_js = bokeh.models.CustomJS(code="""
          document.getElementById('diagrams').style.width='310px';
          hide_menus();
         """)
-        
+
         self.buttons[key].js_on_click(custom_js)
-        
+
         roots = [
             self.buttons["sidenav_button"],
             self.headline.layout,
         ]
         if show_diagram_button:
             roots.append(self.buttons["diagrams_button"])
+        self.roots = roots
+
+        # Add button to control barc drawer
+        key = "barcdiagrams_button"
+        self.buttons[key] = bokeh.models.Button(
+            label = '',# label="Diagrams",# now contains the barc logo
+            css_classes=["float-right",'barc_btn'],
+            name=key)
+
+        custom_js = bokeh.models.CustomJS(code="""
+         document.getElementById('barcdiagrams').style.width='310px';
+         hide_menus();
+        """)
+
+        self.buttons[key].js_on_click(custom_js)
+
+        roots = [
+            self.buttons["sidenav_button"],
+            self.headline.layout,
+        ]
+        if show_diagram_button:
+            roots.append(self.buttons["barcdiagrams_button"])
         self.roots = roots
 
     def connect(self, store):
