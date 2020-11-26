@@ -360,6 +360,16 @@ def main(argv=None):
             title="Settings")
         ])
 
+    tabs2 = bokeh.models.Tabs(tabs=[
+        bokeh.models.Panel(
+            child=bokeh.layouts.column(*layouts["controls"]),
+            title="ToolBar"
+        ),
+        bokeh.models.Panel(
+            child=bokeh.layouts.column(*layouts["settings"]),
+            title="Report")
+        ])
+
     tool_figures = {}
     if data.FEATURE_FLAGS["time_series"]:
         # Series sub-figure widget
@@ -421,6 +431,12 @@ def main(argv=None):
             tool_layout.layout,
             width=400,
             name="series"))
+    document.add_root(
+        bokeh.layouts.column(
+            tools_panel.layout,
+            tool_layout.layout,
+            width=400,
+            name="barc"))
     for root in navbar.roots:
         document.add_root(root)
     for root in app.roots:
@@ -461,14 +477,6 @@ class Navbar:
 
         self.buttons[key].js_on_click(custom_js)
 
-        roots = [
-            self.buttons["sidenav_button"],
-            self.headline.layout,
-        ]
-        if show_diagram_button:
-            roots.append(self.buttons["diagrams_button"])
-        self.roots = roots
-
         # Add button to control barc drawer
         key = "barcdiagrams_button"
         self.buttons[key] = bokeh.models.Button(
@@ -489,6 +497,7 @@ class Navbar:
         ]
         if show_diagram_button:
             roots.append(self.buttons["barcdiagrams_button"])
+            roots.append(self.buttons["diagrams_button"])
         self.roots = roots
 
     def connect(self, store):

@@ -57,6 +57,7 @@
                 <div class="panel-title-container">
                     <span class="close-icon"><i class="fas fa-window-close" onclick="closeId('barcdiagrams')"></i></span><span class="margin-left-1em font-family-helvetica">BARC </span><img src="barclogo.jpg" alt="barc"style="width:10px;height10px;"> <a href="https://barc-docs.readthedocs.io/en/latest/" target="_blank"><i class="fa  fa-question-circle fa-sm help-icon" id="barchelp-icon"></i></a>
                 </div>
+                {{ safe_embed('barc') }}
         </div>
 
         <div class="abs-top-left" style="z-index:4;">
@@ -191,7 +192,7 @@ let reattachRoots = function() {
     return
 
     // Find template roots
-    let classNames = ["control-panel", "series-panel", "time-panel", "colorbar-panel"];
+    let classNames = ["control-panel", "series-panel", "time-panel", "colorbar-panel", "barc-panel"];
     let parents = classNames.reduce(function(data, className) {
         data[className] = document.getElementsByClassName(className)[0];
         return data
@@ -214,6 +215,7 @@ let reattachRoots = function() {
     parents['series-panel'].appendChild(orphans[1])
     parents['time-panel'].appendChild(orphans[2])
     parents['colorbar-panel'].appendChild(orphans[3])
+    parents['barc-panel'].appendChild(orphans[4])
 }
 
 // Trigger KeyPress.hidden_button if present
