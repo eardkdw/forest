@@ -54,10 +54,18 @@
 
         <!-- Diagram drawer -->
         <div id="barcdiagrams" class="barcdiagrams abs-top-right">
-                <div class="panel-title-container">
-                    <span class="close-icon"><i class="fas fa-window-close" onclick="closeId('barcdiagrams')"></i></span> <img src="https://barc-docs.readthedocs.io/en/latest/_images/barclogo.png" alt="barc" width=150px > <a href="https://barc-docs.readthedocs.io/en/latest/" target="_blank"><i class="fa  fa-question-circle fa-sm help-icon" id="barchelp-icon"></i></a>
+                <div class="panel-title-container" >
+                  <div style="display: inline-block; vertical-align:top;">
+                    <span class="close-icon"><i class="fas fa-window-close" onclick="closeId('barcdiagrams')"></i></span>
+                    </div>
+                    <div style="display: inline-block; vertical-align:top;">
+                    <img src="https://barc-docs.readthedocs.io/en/latest/_images/barclogo.png" alt="barc" width=150px >
+                    </div>
+                    <div style="display: inline-block; vertical-align:top;">
+                    <a href="https://barc-docs.readthedocs.io/en/latest/" target="_blank"><i class="fa  fa-question-circle fa-sm help-icon" id="barchelp-icon"></i></a>
+                    </div>
                 </div>
-                {{ safe_embed('barc') }}
+                  {{ safe_embed('barc') }}
         </div>
 
         <div class="abs-top-left" style="z-index:4;">
