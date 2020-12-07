@@ -17,6 +17,12 @@ export interface HasPolyGlyph {
 
 export class FrontDrawToolView extends PolyDrawToolView {
   model: FrontDrawTool
+
+  connect_signals(): void {
+    super.connect_signals()
+    this.connect(this.model.renderers[0].data_source.change, () => this._drawFront('edit'))
+  }
+
   _draw(ev: UIEvent, mode: string, emit: boolean = false): void {
     const renderer = this.model.renderers[0]
     const bez = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("bezier") > -1); })
@@ -112,7 +118,11 @@ export class FrontDrawToolView extends PolyDrawToolView {
     if(mode =="add") {
         offset = 1;
     }
-    const xlen = cds.data[xkey][xidx].length - offset
+    console.log(cds.data);
+    let xlen = 0
+    if(xidx>0) {
+        cds.data[xkey][xidx].length - offset
+    }
     if(xlen > 3)
     {
        if(xlen ==4 || (xlen-1) % 3 == 0 || (!this._drawing && xlen % 3 == 0) ) //last clause should catch closing double-taps

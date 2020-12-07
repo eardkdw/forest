@@ -63,6 +63,7 @@ class BARC:
         self.source['box_edit'] = ColumnDataSource(data.EMPTY)
         self.source['barb'] = ColumnDataSource(data.EMPTY)
         self.source['fronts'] = ColumnDataSource(data.EMPTY)
+        self.source['annotations'] = ColumnDataSource(data=dict(xs=[],ys=[],forecastnotes=[],))
         # set intial width and colours
         self.starting_colour = "black"  # in CSS-type spec
         self.starting_width = 2
@@ -73,6 +74,14 @@ class BARC:
         self.colourPicker = bokeh.models.widgets.ColorPicker(
             title='Select stamp colour:', width=350, name="barc_colours",
             color=self.starting_colour)
+        #glyph annotation box
+        self.annotate = bokeh.models.layouts.Column()
+        self.annotate.children.extend([
+            bokeh.models.widgets.TextInput(title="Title",name='title'),
+            bokeh.models.widgets.TextAreaInput(title="Forecaster's Comments", name="forecastnotes", height=150),
+            bokeh.models.widgets.TextAreaInput(title="Brief Description", name="briefdesc", height=150),
+            bokeh.models.widgets.TextAreaInput(title="Further Notes", name="further", height=150),
+        ])
         # Dropdown Menu of stamp categories
         self.stamp_categories=["Group0 - General meteorological symbols", "Group1 - General meteorological symbols", "Group2 - Precipitation fog ice fog or thunderstorm", "Group3 - Duststorm sandstorm drifting or blowing snow",
                                "Group4 - Fog or ice fog at the time of observation", "Group5 - Drizzle", "Group6 - Rain", "Group7 - Solid precipitation not in showers",
@@ -83,15 +92,15 @@ class BARC:
         self.dropDown.on_change("value", self.call)
         # Save area
         self.saveArea = bokeh.models.widgets.inputs.TextAreaInput(
-            cols=20, max_length=20000)
+            cols=20, max_length=20000,height=200)
         self.saveArea.js_on_change('value',
                                    bokeh.models.CustomJS(
                                    args=dict(sources=self.source,
                                    saveArea=self.saveArea,
                                    figure=self.figures[0]), code="""
         Object.entries(JSON.parse(saveArea.value)).forEach(([k,v]) => {
-            sources[k].data = v;
             sources[k].change.emit();
+            sources[k].data = v;
             if(k.substring(0,10) == 'text_stamp')
             {
                 for(var g = 0; g < sources[k].data['fontsize'].length; g++)
@@ -109,9 +118,10 @@ class BARC:
             bokeh.models.CustomJS(args=dict(sources=self.source,
                                             saveArea=self.saveArea), code="""
                 var outdict = {}
+                console.log(sources['annotations'].data);
                 Object.entries(sources).forEach(([k,v]) =>
                 {
-                    outdict[k] = v.data;
+                        outdict[k] = v.data;
                 })
                 saveArea.value = JSON.stringify(outdict);
             """)
@@ -160,6 +170,13 @@ class BARC:
             self.source['text_stamp' + chr(glyph)].add([], "datasize")
             self.source['text_stamp' + chr(glyph)].add([], "fontsize")
             self.source['text_stamp' + chr(glyph)].add([], "colour")
+
+        #make the DataSources for the Beziérs
+        for name in ['warm','cold','occluded','stationary','dryintrusion']:
+            self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+            self.source['bezier2'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+            self.source['text'+name] = {}
+            self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
 
 
     def set_glyphs(self):
@@ -286,7 +303,7 @@ class BARC:
                     }
                 }
                 """)
-                                              )
+        )
 
         return tool2
 
@@ -375,7 +392,9 @@ class BARC:
                 text=value(glyph),
                 text_font='BARC',
                 text_color="colour",
-                text_font_size="fontsize"
+                text_font_size="fontsize",
+                text_align = 'center',
+                text_baseline = 'middle'
             )
             )
 
@@ -446,7 +465,7 @@ class BARC:
 
     def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black"):
         '''
-        The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it. 
+        The weatherfront function of BARC. This draws a Bézier curve and repeats the symbol(s) along it. 
 
         The colours correspond to the symbols; if there are fewer colours than symbols, it cycles back to the start. 
         If there are more colours than symbols, then the excess are ignored.
@@ -465,10 +484,6 @@ class BARC:
 
         :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
         '''
-        self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
-        self.source['bezier2'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
-        self.source['text'+name] = {}
-        self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
         render_lines = []
         for figure in self.figures:
             render_lines.extend([
@@ -494,8 +509,53 @@ class BARC:
             tags=['barc' + name],
             custom_icon=__file__.replace(basename(__file__),'icons/%s.png' % (name,))
         )
+        self.source['fronts'+name].js_on_change('data',
+                bokeh.models.CustomJS(args=dict(datasource=self.source['fronts'+name]), code="""
+                    console.log(datasource);
+                    """)
+        )
 
         return frontTool
+
+    def annotation(self, symbol="📍"):
+        """Adds a numbered annotation to the plot.
+
+        :param symbol: String to use as a pin. Defaults to Unicode 1f4cd 'Round Pushpin'.
+
+        :returns: :py:class:`PointDrawTool <bokeh.models.tools.PointDrawTool>` with textStamp functionality.
+        """
+        render_lines=[]
+        for figure in self.figures:
+            render_lines.append(
+                figure.text_stamp(
+                    x='xs',
+                    y='ys',
+                    text_font='BARC',
+                    colour="fuchsia",
+                    text=value(symbol),
+                    source=self.source['annotations'],
+                    tags=['annotation'],
+                    text_font_size="20px",
+                    text_align = 'center',
+                    text_baseline = 'bottom'
+
+                )
+            )
+        self.source['annotations'].js_on_change('data',
+            bokeh.models.CustomJS(args=dict(datasource=self.source,
+            annotate=self.annotate), code="""
+                console.log(datasource['annotations'])
+                datasource['annotations'].data['forecastnotes'][datasource['annotations'].data['xs'].length -1] = JSON.stringify(annotate.children.reduce(function(map, obj) { map[obj.name] = obj.value; return map; }, {}));
+                """)
+        )
+            
+        tool3 = PointDrawTool(
+            renderers=render_lines,
+            tags=['barcannotation'],
+        )
+
+        return tool3
+        
 
     def display_glyphs(self):
         """Displays the selected glyph buttons
@@ -546,6 +606,7 @@ class BARC:
                 self.polyLine(),
                 self.polyDraw(),
                 self.windBarb(),
+                self.annotation(),
                 self.weatherFront(),
                 self.weatherFront(name='cold', colour="blue", symbols=chr(983430)),
                 self.weatherFront(name='occluded', colour="purple", symbols=chr(983431)+chr(983430)),
@@ -616,6 +677,7 @@ class BARC:
             'occluded': "occluded",
             'stationary': "stationary",
             'dryintrusion': "dryintrusion",
+            'annotation':'annotation'
         }
         buttons2 = []
         for each in buttonspec2:
@@ -639,7 +701,7 @@ class BARC:
         self.barcTools.children.append(self.glyphrow)
         self.barcTools.children.extend([self.dropDown])
         self.barcTools.children.extend(
-            [self.colourPicker, self.widthPicker, self.saveButton, self.saveArea])
+            [self.colourPicker, self.widthPicker, self.saveButton, self.saveArea, self.annotate])
         self.barcTools.children.append(toolBarBoxes)
 
         return self.barcTools
