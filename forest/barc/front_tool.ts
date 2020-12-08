@@ -98,7 +98,9 @@ export class FrontDrawToolView extends PolyDrawToolView {
       }
      }
      this._emit_cds_changes(bez_ds, true, false, emit)
+     //bez_ds.change.emit()
      this._emit_cds_changes(cds, true, false, emit)
+     //cds.change.emit()
   }
 
   _drawFront(mode: string): void {
@@ -118,11 +120,12 @@ export class FrontDrawToolView extends PolyDrawToolView {
     if(mode =="add") {
         offset = 1;
     }
-    console.log(cds.data);
+    //const xlen = cds.data[xkey][xidx].length - offset
     let xlen = 0
-    if(xidx>0) {
-        cds.data[xkey][xidx].length - offset
+    if(cds.data[xkey][xidx]) {
+      xlen = cds.data[xkey][xidx].length - offset
     }
+    console.log(xlen)
     if(xlen > 3)
     {
        if(xlen ==4 || (xlen-1) % 3 == 0 || (!this._drawing && xlen % 3 == 0) ) //last clause should catch closing double-taps
@@ -187,7 +190,6 @@ export class FrontDrawToolView extends PolyDrawToolView {
           const ts = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("text_stamp") > -1); })
           //how many figures?
           const figlist = new Set([].concat.apply([],(ts.map(a => a.glyph.tags))).filter(function(tag: string) { return tag.startsWith("fig"); })) //list of figure tags
-          console.log(figlist)
           figlist.forEach(function(figtag: string) { 
           let order=0
           const ts_fig = ts.filter(function(element) { return (element.glyph.tags.indexOf(figtag) > -1); })
@@ -220,7 +222,6 @@ export class FrontDrawToolView extends PolyDrawToolView {
               order++;
           }
           //ts.data_source.data = text_ds.data
-          console.log(ts_fig)
           ts_fig.forEach(function(t) {
             t.data_source.change.emit()
           } ) 
