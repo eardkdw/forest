@@ -86,7 +86,8 @@ class BARC:
         self.stamp_categories=["Group0 - General meteorological symbols", "Group1 - General meteorological symbols", "Group2 - Precipitation fog ice fog or thunderstorm", "Group3 - Duststorm sandstorm drifting or blowing snow",
                                "Group4 - Fog or ice fog at the time of observation", "Group5 - Drizzle", "Group6 - Rain", "Group7 - Solid precipitation not in showers",
                                "Group8 - Showery precipitation or precipitation with recent thunderstorm", "Group9 - Thunderstorms", "Group10 - Hurricanes and Typhoons"]
-        self.dropDown = Select(title="Stamp Category to display:", width=350,
+        self.dropDown = Select(title="Meteorological symbols:", width=350,
+
                                value="Group0 - General meteorological symbols",
                                options=self.stamp_categories)
         self.dropDown.on_change("value", self.call)
@@ -208,6 +209,7 @@ class BARC:
         elif str(new) == "Group10 - Hurricanes and Typhoons":
             self.glyphs =  glyphcodes[100:110]
 
+
     def call(self, attr, old, new):
         """Call back from dropdown click
          Removes and inserts new glyphrow
@@ -265,19 +267,19 @@ class BARC:
     def polyDraw(self):
         '''
             Creates a poly draw tool for drawing on the Forest maps.
-
             :returns: a PolyDrawTool instance
         '''
         # colour picker means no longer have separate colour line options
         render_lines = []
         self.source['poly_draw'].add([], "colour")
+        self.source['poly_draw'].add([], "width")
         for figure in self.figures:
             render_lines.append(figure.patches(
                 xs='xs',
                 ys='ys',
+                color="colour",
                 source=self.source['poly_draw'],
                 alpha=0.3,
-                color="colour",
                 level="overlay")
             )
 
@@ -287,9 +289,7 @@ class BARC:
             name="barcpoly_draw"
         )
         self.source['poly_draw'].js_on_change('data',
-            bokeh.models.CustomJS(args=dict(datasource=self.source['poly_draw'],
-            colourPicker=self.colourPicker, widthPicker=self.widthPicker,
-            saveArea=self.saveArea, sources=self.source), code="""
+                                             bokeh.models.CustomJS(args=dict(datasource=self.source['poly_draw'], colourPicker=self.colourPicker, widthPicker=self.widthPicker, saveArea=self.saveArea, sources=self.source), code="""
                 for(var g = 0; g < datasource.data['colour'].length; g++)
                 {
                     if(!datasource.data['colour'][g])
@@ -303,7 +303,6 @@ class BARC:
                 }
                 """)
         )
-
         return tool2
 
     def polyEdit(self):
@@ -335,16 +334,15 @@ class BARC:
     def boxEdit(self):
         '''
             Creates a box edit tool for drawing on the Forest maps.
-
             :returns: a BoxEditTool instance
         '''
-        # Not functional yet
         render_lines = []
         self.source['box_edit'].add([], "colour")
+        self.source['box_edit'].add([], "width")
         for figure in self.figures:
-            render_lines.append(figure.rect(
-                x='xs',
-                y='ys',
+            render_lines.append(figure.patches(
+                xs='xs',
+                ys='ys',
                 source=self.source['box_edit'],
                 alpha=0.3,
                 color="colour",
@@ -357,16 +355,17 @@ class BARC:
             name="barcbox_edit"
         )
         self.source['box_edit'].js_on_change('data',
-             bokeh.models.CustomJS(args=dict(datasource=self.source['box_edit'],
-             colourPicker=self.colourPicker, saveArea=self.saveArea,
-             sources=self.source), code="""
+                                             bokeh.models.CustomJS(args=dict(datasource=self.source['box_edit'], colourPicker=self.colourPicker, saveArea=self.saveArea, sources=self.source), code="""
                 for(var g = 0; g < datasource.data['colour'].length; g++)
                 {
                     if(!datasource.data['colour'][g])
                     {
                         datasource.data['colour'][g] = colourPicker.color;
                     }
-
+                    if(!datasource.data['width'][g])
+                    {
+                        datasource.data['width'][g] = widthPicker.value;
+                    }
                 }
                 """)
                                              )
@@ -464,9 +463,9 @@ class BARC:
 
     def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black"):
         '''
-        The weatherfront function of BARC. This draws a Bézier curve and repeats the symbol(s) along it. 
+        The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it.
 
-        The colours correspond to the symbols; if there are fewer colours than symbols, it cycles back to the start. 
+        The colours correspond to the symbols; if there are fewer colours than symbols, it cycles back to the start.
         If there are more colours than symbols, then the excess are ignored.
 
         Baselines work the same way.
@@ -474,9 +473,9 @@ class BARC:
         Defaults correspond to a warm front.
 
         :param name: String. Name of front type
-        :param colour: Valid Bokeh ColorSpec or Palette (list of colours) 
-        :param symbols: Unicode text string or sequence of Unicode text strings. If it is a string with length > 1, 
-                     the individual characters are spaced out, repeating as necessary. If it is a sequence, 
+        :param colour: Valid Bokeh ColorSpec or Palette (list of colours)
+        :param symbols: Unicode text string or sequence of Unicode text strings. If it is a string with length > 1,
+                     the individual characters are spaced out, repeating as necessary. If it is a sequence,
                      each one is treated as a "character", and spaced in the same way. They can be of
                      arbitrary length but long strings may produce undesirable results.
         :param text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
@@ -502,7 +501,7 @@ class BARC:
                 else:
                     baseline = text_baseline
                 render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name][each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
-                
+
         frontTool = FrontDrawTool(
             renderers=render_lines,
             tags=['barc' + name],
@@ -593,13 +592,14 @@ class BARC:
             figure.add_tools(
                 bokeh.models.tools.UndoTool(tags=['barcundo']),
                 bokeh.models.tools.RedoTool(tags=['barcredo']),
-                bokeh.models.tools.ZoomInTool(tags=['barczoom_in']),
-                bokeh.models.tools.ZoomOutTool(tags=['barczoom_out']),
+                bokeh.models.tools.ZoomInTool(dimensions="both",tags=['barczoom_in']),
+                bokeh.models.tools.ZoomOutTool(dimensions="both",tags=['barczoom_out']),
                 bokeh.models.tools.PanTool(tags=['barcpan']),
                 bokeh.models.tools.WheelZoomTool(tags=['barcwheelzoom']),
                 bokeh.models.tools.BoxZoomTool(tags=['barcboxzoom']),
+                bokeh.models.tools.BoxSelectTool(tags=['barcbox_edit']),
                 bokeh.models.tools.ResetTool(tags=['barcreset']),
-                self.boxEdit(),
+                bokeh.models.tools.TapTool(tags=['barcreset']),
                 self.polyLine(),
                 self.polyDraw(),
                 self.windBarb(),
@@ -634,21 +634,16 @@ class BARC:
             'pan': "move",
             'boxzoom': "boxzoom",
             'wheelzoom': "wheelzoom",
-            'reset': 'reset',
             'box_edit': 'box_edit',
+            'reset': 'reset',
+            'taptool;': 'tap',
             'freehand': "freehand",
             'poly_draw': 'poly_draw',
             'poly_edit': 'poly_edit',
             'textbox': 'textbox',
         }
-        buttonsubspec1 = {
 
-            'freehand': "freehand",
-            'poly_draw': 'poly_draw',
-            'poly_edit': 'poly_edit',
-            'textbox': 'textbox',
-        }
-        buttons1 = []
+        buttons = []
         for each in buttonspec1:
             button = bokeh.models.widgets.Button(
                 label=buttonspec1[each],
@@ -657,15 +652,14 @@ class BARC:
                 aspect_ratio=1,
                 margin=(0, 0, 0, 0)
             )
-            if each in buttonsubspec1:
-                button.js_on_event(ButtonClick,
-                bokeh.models.CustomJS(args=dict(
-                buttons=list(toolBarBoxes.select({'tags': ['barc' + each]}))),
-                code="""
+            button.js_on_event(ButtonClick,
+            bokeh.models.CustomJS(args=dict(
+            buttons=list(toolBarBoxes.select({'tags': ['barc' + each]}))),
+            code="""
                     var each;
                     for(each of buttons) { each.active = true; }
                     """))
-            buttons1.append(button)
+            buttons.append(button)
 
         buttonspec2 = {
             'windbarb': "windbarb",
@@ -692,8 +686,8 @@ class BARC:
             """))
             buttons2.append(button)
 
-        self.barcTools.children.append(bokeh.layouts.grid(buttons1, ncols=7))
-        self.barcTools.children.append(bokeh.layouts.grid(buttons2, ncols=5))
+        self.barcTools.children.append(bokeh.layouts.grid(buttons, ncols=7))
+        self.barcTools.children.append(bokeh.layouts.grid(buttons2, ncols=6))
         self.glyphrow = bokeh.layouts.grid(self.display_glyphs(), ncols=5)
         self.barcTools.children.append(self.glyphrow)
         self.barcTools.children.extend([self.dropDown])
