@@ -135,6 +135,11 @@ div#barcdiagrams.barcdiagrams div.barc-button.barc-stationary-button button {
   color: transparent !important;
 }
 
+div#barcdiagrams.barcdiagrams div.barc-button.barc-dryintrusion-button button {
+  background-image: url("icons/dryintrusion.png");
+  color: transparent !important;
+}
+
 div#barcdiagrams.barcdiagrams div.barc-button.barc-pw-000-button button {
   background-image: url("icons/group0/pw-000.png");
   color: transparent !important;
