@@ -118,7 +118,6 @@ class BARC:
             bokeh.models.CustomJS(args=dict(sources=self.source,
                                             saveArea=self.saveArea), code="""
                 var outdict = {}
-                console.log(sources['annotations'].data);
                 Object.entries(sources).forEach(([k,v]) =>
                 {
                         outdict[k] = v.data;
@@ -511,7 +510,6 @@ class BARC:
         )
         self.source['fronts'+name].js_on_change('data',
                 bokeh.models.CustomJS(args=dict(datasource=self.source['fronts'+name]), code="""
-                    console.log(datasource);
                     """)
         )
 
@@ -544,7 +542,6 @@ class BARC:
         self.source['annotations'].js_on_change('data',
             bokeh.models.CustomJS(args=dict(datasource=self.source,
             annotate=self.annotate), code="""
-                console.log(datasource['annotations'])
                 datasource['annotations'].data['forecastnotes'][datasource['annotations'].data['xs'].length -1] = JSON.stringify(annotate.children.reduce(function(map, obj) { map[obj.name] = obj.value; return map; }, {}));
                 """)
         )
