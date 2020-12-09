@@ -20,7 +20,11 @@ export class FrontDrawToolView extends PolyDrawToolView {
 
   connect_signals(): void {
     super.connect_signals()
-    this.connect(this.model.renderers[0].data_source.change, () => this._drawFront('edit'))
+    //const bez = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("bezier") > -1); })
+    //const bez_ds = bez[0].data_source
+    const text_stamps = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("text_stamp") > -1); })
+    const text_ds = text_stamps[0].data_source
+    this.connect(this.model.renderers[0].data_source.change, () => text_ds.change.emit())
   }
 
   _draw(ev: UIEvent, mode: string, emit: boolean = false): void {
@@ -49,14 +53,14 @@ export class FrontDrawToolView extends PolyDrawToolView {
       this._pop_glyphs(cds, this.model.num_objects)
       if (xkey) cds.get_array(xkey).push([x, x])
       if (ykey) cds.get_array(ykey).push([y, y])
-      if (x0key) bez_ds.get_array(x0key).push(null)
-      if (y0key) bez_ds.get_array(y0key).push(null)
-      if (cx0key) bez_ds.get_array(cx0key).push(null)
-      if (cy0key) bez_ds.get_array(cy0key).push(null)
-      if (cx1key) bez_ds.get_array(cx1key).push(null)
-      if (cy1key) bez_ds.get_array(cy1key).push(null)
-      if (x1key) bez_ds.get_array(x1key).push(null)
-      if (y1key) bez_ds.get_array(y1key).push(null)
+      if (x0key) bez_ds.get_array(x0key).push([null])
+      if (y0key) bez_ds.get_array(y0key).push([null])
+      if (cx0key) bez_ds.get_array(cx0key).push([null])
+      if (cy0key) bez_ds.get_array(cy0key).push([null])
+      if (cx1key) bez_ds.get_array(cx1key).push([null])
+      if (cy1key) bez_ds.get_array(cy1key).push([null])
+      if (x1key) bez_ds.get_array(x1key).push([null])
+      if (y1key) bez_ds.get_array(y1key).push([null])
       this._pad_empty_columns(cds, [xkey, ykey])
     } else if (mode == 'edit') {
       if (xkey) {
@@ -115,17 +119,14 @@ export class FrontDrawToolView extends PolyDrawToolView {
     const [cx0key, cy0key] = [bez_glyph.cx0.field, bez_glyph.cy0.field]
     const [cx1key, cy1key] = [bez_glyph.cx1.field, bez_glyph.cy1.field]
     const [x1key, y1key] = [bez_glyph.x1.field, bez_glyph.y1.field]
-    const xidx = cds.data[xkey].length-1
     let offset = 0
     if(mode =="add") {
         offset = 1;
     }
-    //const xlen = cds.data[xkey][xidx].length - offset
-    let xlen = 0
-    if(cds.data[xkey][xidx]) {
-      xlen = cds.data[xkey][xidx].length - offset
-    }
-    console.log(xlen)
+    let xidx = cds.data[xkey].length-1
+    const xlen = cds.data[xkey][xidx].length - offset
+    //let xlen = 0
+    //xlen = cds.data[xkey][xidx].length - offset
     if(xlen > 3)
     {
        if(xlen ==4 || (xlen-1) % 3 == 0 || (!this._drawing && xlen % 3 == 0) ) //last clause should catch closing double-taps
@@ -133,39 +134,41 @@ export class FrontDrawToolView extends PolyDrawToolView {
           //xs and ys are one longer than in the 'edit' stanza
           const xs = cds.data[xkey][cds.data[xkey].length-1]
           const ys = cds.data[ykey][cds.data[ykey].length-1]
-          const x0 = bez_ds.get_array<number>(x0key)
-          const y0 = bez_ds.get_array<number>(y0key)
-          const cx0 = bez_ds.get_array<number>(cx0key)
-          const cy0 = bez_ds.get_array<number>(cy0key)
-          const cx1 = bez_ds.get_array<number>(cx1key)
-          const cy1 = bez_ds.get_array<number>(cy1key)
-          const x1 = bez_ds.get_array<number>(x1key)
-          const y1 = bez_ds.get_array<number>(y1key)
+          const x0 = bez_ds.get_array<number[]>(x0key)
+          const y0 = bez_ds.get_array<number[]>(y0key)
+          const cx0 = bez_ds.get_array<number[]>(cx0key)
+          const cy0 = bez_ds.get_array<number[]>(cy0key)
+          const cx1 = bez_ds.get_array<number[]>(cx1key)
+          const cy1 = bez_ds.get_array<number[]>(cy1key)
+          const x1 = bez_ds.get_array<number[]>(x1key)
+          const y1 = bez_ds.get_array<number[]>(y1key)
          
         for(var i=0; i < (xlen/3); i+=1) {
           const beznumber = Math.floor((xlen/3) - 1) //integer. using Floor because xlen=4 for the first one.
-          x0[beznumber] = xs[3*beznumber +0]
-          y0[beznumber] = ys[3*beznumber +0]
-          cx0[beznumber] = xs[3*beznumber +1]
-          cy0[beznumber] = ys[3*beznumber +1]
-          cx1[beznumber] = xs[3*beznumber +2]
-          cy1[beznumber] = ys[3*beznumber +2]
-          x1[beznumber] = xs[3*beznumber +3]
-          y1[beznumber] = ys[3*beznumber +3]
+          //const beznumber = Math.floor(i) //integer. using Floor because xlen=4 for the first one.
+          console.log([beznumber,xidx])
+          x0[xidx][beznumber] = xs[3*beznumber +0]
+          y0[xidx][beznumber] = ys[3*beznumber +0]
+          cx0[xidx][beznumber] = xs[3*beznumber +1]
+          cy0[xidx][beznumber] = ys[3*beznumber +1]
+          cx1[xidx][beznumber] = xs[3*beznumber +2]
+          cy1[xidx][beznumber] = ys[3*beznumber +2]
+          x1[xidx][beznumber] = xs[3*beznumber +3]
+          y1[xidx][beznumber] = ys[3*beznumber +3]
 
           //draw text to fit curve
           if(mode == "add" || this._drawing == false) { //a new point has been added *or* editing has ended
 
           //calculate coeffcients (per http://www.planetclegg.com/projects/WarpingTextToSplines.html x0=x0, x1=cx0, x2=cx1, x3=x1 etc.)
-          const A = x1[beznumber] - 3*cx1[beznumber] + 3*cx0[beznumber] - x0[beznumber]
-          const B = 3 * cx1[beznumber] - 6 * cx0[beznumber] + 3 * x0[beznumber]
-          const C = 3 * cx0[beznumber] - 3 * x0[beznumber]
-          const D = x0[beznumber]
+          const A = x1[xidx][beznumber] - 3*cx1[xidx][beznumber] + 3*cx0[xidx][beznumber] - x0[xidx][beznumber]
+          const B = 3 * cx1[xidx][beznumber] - 6 * cx0[xidx][beznumber] + 3 * x0[xidx][beznumber]
+          const C = 3 * cx0[xidx][beznumber] - 3 * x0[xidx][beznumber]
+          const D = x0[xidx][beznumber]
 
-          const E = y1[beznumber] - 3 * cy1[beznumber] + 3 * cy0[beznumber] - y0[beznumber]
-          const F = 3 * cy1[beznumber] - 6 * cy0[beznumber] + 3 * y0[beznumber]
-          const G = 3 * cy0[beznumber] - 3 * y0[beznumber]
-          const H = y0[beznumber]
+          const E = y1[xidx][beznumber] - 3 * cy1[xidx][beznumber] + 3 * cy0[xidx][beznumber] - y0[xidx][beznumber]
+          const F = 3 * cy1[xidx][beznumber] - 6 * cy0[xidx][beznumber] + 3 * y0[xidx][beznumber]
+          const G = 3 * cy0[xidx][beznumber] - 3 * y0[xidx][beznumber]
+          const H = y0[xidx][beznumber]
 
           //calculate arc-length (approximately)
           const segments = 200 //number of segments
