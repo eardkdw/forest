@@ -131,44 +131,57 @@ export class FrontDrawToolView extends PolyDrawToolView {
     {
        if(xlen ==4 || (xlen-1) % 3 == 0 || (!this._drawing && xlen % 3 == 0) ) //last clause should catch closing double-taps
        {
+        for(var i=0; i < (xlen/3); i+=1) {
+          const beznumber = Math.floor((xlen/3) - 1) //integer. using Floor because xlen=4 for the first one.
+          //const beznumber = i //integer. using Floor because xlen=4 for the first one.
           //xs and ys are one longer than in the 'edit' stanza
           const xs = cds.data[xkey][cds.data[xkey].length-1]
           const ys = cds.data[ykey][cds.data[ykey].length-1]
-          const x0 = bez_ds.get_array<number[]>(x0key)
-          const y0 = bez_ds.get_array<number[]>(y0key)
-          const cx0 = bez_ds.get_array<number[]>(cx0key)
-          const cy0 = bez_ds.get_array<number[]>(cy0key)
-          const cx1 = bez_ds.get_array<number[]>(cx1key)
-          const cy1 = bez_ds.get_array<number[]>(cy1key)
-          const x1 = bez_ds.get_array<number[]>(x1key)
-          const y1 = bez_ds.get_array<number[]>(y1key)
-         
-        for(var i=0; i < (xlen/3); i+=1) {
-          const beznumber = Math.floor((xlen/3) - 1) //integer. using Floor because xlen=4 for the first one.
-          //const beznumber = Math.floor(i) //integer. using Floor because xlen=4 for the first one.
-          console.log([beznumber,xidx])
-          x0[xidx][beznumber] = xs[3*beznumber +0]
-          y0[xidx][beznumber] = ys[3*beznumber +0]
-          cx0[xidx][beznumber] = xs[3*beznumber +1]
-          cy0[xidx][beznumber] = ys[3*beznumber +1]
-          cx1[xidx][beznumber] = xs[3*beznumber +2]
-          cy1[xidx][beznumber] = ys[3*beznumber +2]
-          x1[xidx][beznumber] = xs[3*beznumber +3]
-          y1[xidx][beznumber] = ys[3*beznumber +3]
 
+          let bezlength = 0;
+          cds.get_array(xkey).forEach(
+            function(each: []) { 
+                  if(each != cds.data[xkey][xidx])
+                  {
+                     bezlength += Math.floor((each.length /3)) // i.e. the same as xlen but for all of them except the current one
+                  }
+               }
+          );
+
+          const x0 = bez_ds.get_array<number>(x0key)
+          const y0 = bez_ds.get_array<number>(y0key)
+          const cx0 = bez_ds.get_array<number>(cx0key)
+          const cy0 = bez_ds.get_array<number>(cy0key)
+          const cx1 = bez_ds.get_array<number>(cx1key)
+          const cy1 = bez_ds.get_array<number>(cy1key)
+          const x1 = bez_ds.get_array<number>(x1key)
+          const y1 = bez_ds.get_array<number>(y1key)
+        
+          let beztot = beznumber + bezlength
+         
+          x0[beztot] = xs[3*beznumber +0]
+          y0[beztot] = ys[3*beznumber +0]
+          cx0[beztot] = xs[3*beznumber +1]
+          cy0[beztot] = ys[3*beznumber +1]
+          cx1[beztot] = xs[3*beznumber +2]
+          cy1[beztot] = ys[3*beznumber +2]
+          x1[beztot] = xs[3*beznumber +3]
+          y1[beztot] = ys[3*beznumber +3]
+
+          console.log([beztot])
           //draw text to fit curve
           if(mode == "add" || this._drawing == false) { //a new point has been added *or* editing has ended
 
           //calculate coeffcients (per http://www.planetclegg.com/projects/WarpingTextToSplines.html x0=x0, x1=cx0, x2=cx1, x3=x1 etc.)
-          const A = x1[xidx][beznumber] - 3*cx1[xidx][beznumber] + 3*cx0[xidx][beznumber] - x0[xidx][beznumber]
-          const B = 3 * cx1[xidx][beznumber] - 6 * cx0[xidx][beznumber] + 3 * x0[xidx][beznumber]
-          const C = 3 * cx0[xidx][beznumber] - 3 * x0[xidx][beznumber]
-          const D = x0[xidx][beznumber]
+          const A = x1[beztot] - 3*cx1[beztot] + 3*cx0[beztot] - x0[beztot]
+          const B = 3 * cx1[beztot] - 6 * cx0[beztot] + 3 * x0[beztot]
+          const C = 3 * cx0[beztot] - 3 * x0[beztot]
+          const D = x0[beztot]
 
-          const E = y1[xidx][beznumber] - 3 * cy1[xidx][beznumber] + 3 * cy0[xidx][beznumber] - y0[xidx][beznumber]
-          const F = 3 * cy1[xidx][beznumber] - 6 * cy0[xidx][beznumber] + 3 * y0[xidx][beznumber]
-          const G = 3 * cy0[xidx][beznumber] - 3 * y0[xidx][beznumber]
-          const H = y0[xidx][beznumber]
+          const E = y1[beztot] - 3 * cy1[beztot] + 3 * cy0[beztot] - y0[beztot]
+          const F = 3 * cy1[beztot] - 6 * cy0[beztot] + 3 * y0[beztot]
+          const G = 3 * cy0[beztot] - 3 * y0[beztot]
+          const H = y0[beztot]
 
           //calculate arc-length (approximately)
           const segments = 200 //number of segments
