@@ -132,6 +132,9 @@ class BARC:
             """)
         )'''
         self.saveButton.on_click(self.saveDataSources)
+        self.loadButton = bokeh.models.widgets.Button(
+            name="barc_save", width=350, label="Save")
+        self.loadButton.on_click(self.loadDataSources)
 
         # from BARC.woff take the index dictionary
         # James's icons correspond pw-000 - pw-099 glyph index 2 to 101
@@ -612,6 +615,22 @@ class BARC:
 
         c.execute("INSERT INTO saved_data (label, dateTime, json) VALUES (?, ?, ?)", ['test', time.time(), json.dumps(outdict)])    
         conn.commit()
+
+    def loadDataSources(self):
+        ''' 
+         loads a JSON datasource and updates current sources
+        '''
+        conn = sqlite3.connect("forest/barc/barc-save.sdb")
+        c = conn.cursor()
+
+        c.execute("SELECT * FROM saved_data WHERE label='test'")
+        sqlds = c.fetchone()
+        jsonds = json.loads(sqlds[3])
+        for each in self.source:
+            self.source[each].data = jsonds[each]
+
+        
+      
         
 
     def ToolBar(self):
@@ -724,7 +743,7 @@ class BARC:
         self.barcTools.children.append(self.glyphrow)
         self.barcTools.children.extend([self.dropDown])
         self.barcTools.children.extend(
-            [self.colourPicker, self.widthPicker, self.saveButton, self.saveArea, self.annotate])
+            [self.colourPicker, self.widthPicker, self.saveButton, self.loadButton, self.saveArea, self.annotate])
         self.barcTools.children.append(toolBarBoxes)
 
         return self.barcTools
