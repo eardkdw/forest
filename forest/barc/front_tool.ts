@@ -168,7 +168,6 @@ export class FrontDrawToolView extends PolyDrawToolView {
           x1[beztot] = xs[3*beznumber +3]
           y1[beztot] = ys[3*beznumber +3]
 
-          console.log([beztot])
           //draw text to fit curve
           if(mode == "add" || this._drawing == false) { //a new point has been added *or* editing has ended
 
@@ -240,6 +239,7 @@ export class FrontDrawToolView extends PolyDrawToolView {
           //ts.data_source.data = text_ds.data
           ts_fig.forEach(function(t) {
             t.data_source.change.emit()
+            console.log(t.data_source);
           } ) 
           })
          } 

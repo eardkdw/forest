@@ -29,6 +29,10 @@ This module provides a :class:`BARC` to enable the Barc Tool Bar
 
 """
 import bokeh.models
+import json
+import sqlite3
+import time
+import pandas as pd
 
 from os.path import basename
 
@@ -53,7 +57,8 @@ class BARC:
     barcTools = None
     source = {}
 
-    def __init__(self, figures):
+    def __init__(self, figures, app):
+        self.app = app
         self.figures = figures
         self.document = bokeh.plotting.curdoc()
         self.barcTools = bokeh.models.layouts.Column(name="barcTools")
@@ -115,17 +120,19 @@ class BARC:
 
         self.saveButton = bokeh.models.widgets.Button(
             name="barc_save", width=350, label="Save")
-        self.saveButton.js_on_click(
+        '''self.saveButton.js_on_click(
             bokeh.models.CustomJS(args=dict(sources=self.source,
                                             saveArea=self.saveArea), code="""
-                var outdict = {}
+                /*var outdict = {}
                 Object.entries(sources).forEach(([k,v]) =>
                 {
                         outdict[k] = v.data;
                 })
-                saveArea.value = JSON.stringify(outdict);
+                saveArea.value = JSON.stringify(outdict);*/
             """)
-        )
+        )'''
+        self.saveButton.on_click(self.saveDataSources)
+
         # from BARC.woff take the index dictionary
         # James's icons correspond pw-000 - pw-099 glyph index 2 to 101
         # James's icons correspond pw-100 - pw-109 glyph index 114 to 123
@@ -175,8 +182,12 @@ class BARC:
         for name in ['warm','cold','occluded','stationary','dryintrusion']:
             self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
             self.source['bezier2'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
-            self.source['text'+name] = {}
             self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
+
+    def _route(url):
+        def magic(self):
+           self.app.route(url)
+        return magic
 
 
     def set_glyphs(self):
@@ -491,7 +502,7 @@ class BARC:
             figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier2'+name], line_color="#00aaff", line_width=2, tags=['bezier'])
             ])
             for each in symbols:
-                self.source['text' + name][each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
+                self.source['text' + name+each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
                 if isinstance(colour, type([])):
                     col = colour[symbols.index(each) % len(colour)]
                 else:
@@ -500,7 +511,7 @@ class BARC:
                     baseline = text_baseline[symbols.index(each) % len(colour)]
                 else:
                     baseline = text_baseline
-                render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name][each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
+                render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name+each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
 
         frontTool = FrontDrawTool(
             renderers=render_lines,
@@ -581,6 +592,27 @@ class BARC:
         return buttons
 
 # -----------------------------------------------------------------------------
+
+    def saveDataSources(self):
+        '''
+          saves current datasources to an sqlite db
+
+          create statement: "CREATE TABLE saved_data (id INTEGER PRIMARY KEY, label TEXT, dateTime INTEGER, json TEXT)"
+        '''
+        conn = sqlite3.connect("forest/barc/barc-save.sdb")
+        c = conn.cursor()
+
+        outdict = {}
+
+        for (k,v) in self.source.items():
+            try:
+               outdict[k] = v.data
+            except:
+               print(self.source[k])
+
+        c.execute("INSERT INTO saved_data (label, dateTime, json) VALUES (?, ?, ?)", ['test', time.time(), json.dumps(outdict)])    
+        conn.commit()
+        
 
     def ToolBar(self):
         """Barc Tool Bar
