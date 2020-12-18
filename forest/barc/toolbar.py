@@ -57,8 +57,7 @@ class BARC:
     barcTools = None
     source = {}
 
-    def __init__(self, figures, app):
-        self.app = app
+    def __init__(self, figures):
         self.figures = figures
         self.document = bokeh.plotting.curdoc()
         self.barcTools = bokeh.models.layouts.Column(name="barcTools")
@@ -120,20 +119,20 @@ class BARC:
 
         self.saveButton = bokeh.models.widgets.Button(
             name="barc_save", width=350, label="Save")
-        '''self.saveButton.js_on_click(
+        self.saveButton.js_on_click(
             bokeh.models.CustomJS(args=dict(sources=self.source,
                                             saveArea=self.saveArea), code="""
-                /*var outdict = {}
+                var outdict = {}
                 Object.entries(sources).forEach(([k,v]) =>
                 {
                         outdict[k] = v.data;
                 })
-                saveArea.value = JSON.stringify(outdict);*/
+                saveArea.value = JSON.stringify(outdict);
             """)
-        )'''
+        )
         self.saveButton.on_click(self.saveDataSources)
         self.loadButton = bokeh.models.widgets.Button(
-            name="barc_save", width=350, label="Save")
+            name="barc_save", width=350, label="Load")
         self.loadButton.on_click(self.loadDataSources)
 
         # from BARC.woff take the index dictionary
@@ -186,12 +185,8 @@ class BARC:
             self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
             self.source['bezier2'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
             self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
-
-    def _route(url):
-        def magic(self):
-           self.app.route(url)
-        return magic
-
+        
+        self.tool_bar =self.ToolBar()
 
     def set_glyphs(self):
         """Set Glyphs based on drop down selection
@@ -505,7 +500,8 @@ class BARC:
             figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier2'+name], line_color="#00aaff", line_width=2, tags=['bezier'])
             ])
             for each in symbols:
-                self.source['text' + name+each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
+                if not 'text' + name+each in self.source:
+                  self.source['text' + name+each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
                 if isinstance(colour, type([])):
                     col = colour[symbols.index(each) % len(colour)]
                 else:
@@ -528,7 +524,7 @@ class BARC:
 
         return frontTool
 
-    def annotation(self, symbol="📍"):
+    '''def annotation(self, symbol="📍"):
         """Adds a numbered annotation to the plot.
 
         :param symbol: String to use as a pin. Defaults to Unicode 1f4cd 'Round Pushpin'.
@@ -564,7 +560,7 @@ class BARC:
             tags=['barcannotation'],
         )
 
-        return tool3
+        return tool3'''
         
 
     def display_glyphs(self):
@@ -654,7 +650,6 @@ class BARC:
                 self.polyLine(),
                 self.polyDraw(),
                 self.windBarb(),
-                self.annotation(),
                 self.weatherFront(),
                 self.weatherFront(name='cold', colour="blue", symbols=chr(983430)),
                 self.weatherFront(name='occluded', colour="purple", symbols=chr(983431)+chr(983430)),
