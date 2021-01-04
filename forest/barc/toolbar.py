@@ -67,7 +67,7 @@ class BARC:
         self.source['box_edit'] = ColumnDataSource(data.EMPTY)
         self.source['barb'] = ColumnDataSource(data.EMPTY)
         self.source['fronts'] = ColumnDataSource(data.EMPTY)
-        self.source['annotations'] = ColumnDataSource(data=dict(xs=[],ys=[],forecastnotes=[],))
+        self.source['annotations'] = ColumnDataSource(data=dict(notes=[]))
         # set intial width and colours
         self.starting_colour = "black"  # in CSS-type spec
         self.starting_width = 2
@@ -609,6 +609,10 @@ class BARC:
             except:
                print(self.source[k])
 
+        outdict['annotations'] = {}
+        for each in self.annotate.children:
+            outdict['annotations'][each.name] = each.value
+
         c.execute("INSERT INTO saved_data (label, dateTime, json) VALUES (?, ?, ?)", ['test', time.time(), json.dumps(outdict)])    
         conn.commit()
 
@@ -622,8 +626,13 @@ class BARC:
         c.execute("SELECT * FROM saved_data WHERE label='test'")
         sqlds = c.fetchone()
         jsonds = json.loads(sqlds[3])
+        for name in jsonds['annotations']:
+            annotes = self.annotate.select({'name': name})
+            for n in annotes:
+               n.value = jsonds['annotations'][name]
         for each in self.source:
-            self.source[each].data = jsonds[each]
+            if each != 'annotations':
+               self.source[each].data = jsonds[each]
 
         
       
