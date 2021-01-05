@@ -36,7 +36,7 @@ import pandas as pd
 
 from os.path import basename
 
-from bokeh.models import ColumnDataSource, Paragraph, Select
+from bokeh.models import ColumnDataSource, Paragraph, Select, Dropdown
 from bokeh.models.glyphs import Text
 from bokeh.core.properties import value
 from bokeh.models.tools import PolyDrawTool, PolyEditTool, BoxEditTool
@@ -60,6 +60,8 @@ class BARC:
     def __init__(self, figures):
         self.figures = figures
         self.document = bokeh.plotting.curdoc()
+        #db for saving
+        self.conn = sqlite3.connect("forest/barc/barc-save.sdb")
         self.barcTools = bokeh.models.layouts.Column(name="barcTools")
         # initalise sources
         self.source['polyline'] = ColumnDataSource(data.EMPTY)
@@ -131,8 +133,13 @@ class BARC:
             """)
         )
         self.saveButton.on_click(self.saveDataSources)
-        self.loadButton = bokeh.models.widgets.Button(
-            name="barc_save", width=350, label="Load")
+
+        #populate list of saved markups
+        c = self.conn.cursor()
+        c.execute("SELECT label, CAST(id AS TEXT) FROM saved_data ORDER BY dateTime DESC")
+        menu = c.fetchall()
+        self.loadButton = bokeh.models.widgets.Dropdown(
+            name="barc_load", width=350, label="Load", menu=menu )
         self.loadButton.on_click(self.loadDataSources)
 
         # from BARC.woff take the index dictionary
@@ -598,8 +605,7 @@ class BARC:
 
           create statement: "CREATE TABLE saved_data (id INTEGER PRIMARY KEY, label TEXT, dateTime INTEGER, json TEXT)"
         '''
-        conn = sqlite3.connect("forest/barc/barc-save.sdb")
-        c = conn.cursor()
+        c = self.conn.cursor()
 
         outdict = {}
 
@@ -613,17 +619,17 @@ class BARC:
         for each in self.annotate.children:
             outdict['annotations'][each.name] = each.value
 
-        c.execute("INSERT INTO saved_data (label, dateTime, json) VALUES (?, ?, ?)", ['test', time.time(), json.dumps(outdict)])    
-        conn.commit()
+        c.execute("INSERT INTO saved_data (label, dateTime, json) VALUES (?, ?, ?)", [outdict['annotations']['title'], time.time(), json.dumps(outdict)])    
+        self.conn.commit()
 
-    def loadDataSources(self):
+    def loadDataSources(self, event):
         ''' 
          loads a JSON datasource and updates current sources
         '''
-        conn = sqlite3.connect("forest/barc/barc-save.sdb")
-        c = conn.cursor()
+        print(event.item)
+        c = self.conn.cursor()
 
-        c.execute("SELECT * FROM saved_data WHERE label='test'")
+        c.execute("SELECT * FROM saved_data WHERE id=?", [event.item])
         sqlds = c.fetchone()
         jsonds = json.loads(sqlds[3])
         for name in jsonds['annotations']:
