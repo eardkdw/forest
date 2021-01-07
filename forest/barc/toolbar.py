@@ -5,7 +5,7 @@ Barc Tool Bar
 This module provides a :class:`BARC` to enable the Barc Tool Bar
 
 .. module:: toolbar
-    :synopis: The barc tool bar and meathods required to enable the barc plugin
+    :synopsis: The barc tool bar and methods required to enable the barc plugin
     fuctionality
 .. moduleauthors: Dan Walker @ NCAS and Helen Burns & Dan Elis @ CEMAC (Leeds)
 
@@ -13,12 +13,12 @@ This module provides a :class:`BARC` to enable the Barc Tool Bar
     :members:
         ToolBar: Creates tool bar of tools listed below
         polyLine: FreehandDrawTool
-        polyDraw: PolygonDrawToll
-        polyEdit: edit veticies of polygon
+        polyDraw: PolygonDrawTool
+        polyEdit: edit verticies of polygon
         boxEdit: BoxDraw and edit tool
         textStamp: method to enable text stamping
         windBarb: stamp a windbarb
-        weatherFront: Not in use
+        weatherFront: Bézier curves, optionally with text glyphs repeated along them, e.g. for warm fronts.
         display_glyphs: displays the selected Category of textstamps
         set_glyphs: set textstamps to display
         call: Callback function to dynamically alter tool bar
@@ -277,7 +277,7 @@ class BARC:
     def polyDraw(self):
         '''
             Creates a poly draw tool for drawing on the Forest maps.
-            :returns: a PolyDrawTool instance
+            :returns: a :py:class:`PolyDrawTool <bokeh.models.tools.PolyDrawTool>` instance
         '''
         # colour picker means no longer have separate colour line options
         render_lines = []
@@ -344,7 +344,8 @@ class BARC:
     def boxEdit(self):
         '''
             Creates a box edit tool for drawing on the Forest maps.
-            :returns: a `BoxEditTool <bokeh.models.tools.BoxEditTool>` instance
+
+            :returns: a :py:class:`BoxEditTool <bokeh.models.tools.BoxEditTool>` instance
         '''
         render_lines = []
         self.source['box_edit'].add([], "colour")
@@ -473,7 +474,7 @@ class BARC:
 
     def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black", css_class=None, line_dash="solid"):
         '''
-        The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it.
+        The weatherfront function of BARC. This draws a Bézier curve and repeats the symbol(s) along it.
 
         The colours correspond to the symbols; if there are fewer colours than symbols, it cycles back to the start.
         If there are more colours than symbols, then the excess are ignored.
@@ -482,14 +483,14 @@ class BARC:
 
         Defaults correspond to a warm front.
 
-        :param name: String. Name of front type
-        :param colour: Valid Bokeh ColorSpec or Palette (list of colours)
+        :param str name: Name of front type
+        :param colour: Valid :py:class:`ColorSpec <bokeh.core.properties.ColorSpec>` or list of ColorSpecs
         :param symbols: Unicode text string or sequence of Unicode text strings. If it is a string with length > 1,
                      the individual characters are spaced out, repeating as necessary. If it is a sequence,
                      each one is treated as a "character", and spaced in the same way. They can be of
                      arbitrary length but long strings may produce undesirable results.
-        :param text_baseline: Valid :py:class:`TextBaseline <bokeh.core.enums.TextBaseline>` or List of TextBaselines
-        :param css_class: name of a css class to apply to the button. Defaults to ``barc-<name>-button``, where <name> is the ``name`` parameter.
+        :param text_baseline: Valid :py:data:`TextBaseline <bokeh.core.enums.TextBaseline>` or list of TextBaselines
+        :param str css_class: name of a css class to apply to the button. Defaults to ``barc-<name>-button``, where <name> is the ``name`` parameter.
         :param line_dash: A :py:class:`DashPattern <bokeh.core.properties.DashPattern>` specification.
 
         :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
