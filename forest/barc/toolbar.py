@@ -691,6 +691,7 @@ class BARC:
                 self.weatherFront(name='warmadvection', colour="red", line_dash="dashed", symbols=chr(983431)),
                 self.weatherFront(name='convergence', colour="orange", line_colour="orange", text_baseline="middle", symbols=chr(983593)),
                 self.weatherFront(name='squall', colour="red", line_dash="dashed", text_baseline="middle", line_colour="red", symbols=chr(983590)),
+                self.weatherFront(name='streamline', colour="#0000f0", line_dash="dashed", text_baseline="middle", line_colour="#00fe00", symbols=chr(9679)),
                 self.weatherFront(name='lowleveljet', colour="olive", text_baseline="middle", line_colour="olive", symbols=chr(983552)),
             )
 
