@@ -471,7 +471,7 @@ class BARC:
 
         return tool4
 
-    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black"):
+    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black", css_class=None):
         '''
         The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it.
 
@@ -489,9 +489,18 @@ class BARC:
                      each one is treated as a "character", and spaced in the same way. They can be of
                      arbitrary length but long strings may produce undesirable results.
         :param text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
+        :param css_class: name of a css class to apply to the button. Defaults to ``barc-<name>-button``, where <name> is the ``name`` parameter.
 
         :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
         '''
+
+        #add definition dict for front<->css mapping, if not already present
+        # should be a mapping of name: css_class_name (e.g. "warm":"barc-warm-button") 
+        if not hasattr(self, 'frontbuttons'):
+            self.frontbuttons = {}
+
+        self.frontbuttons[name] = css_class if css_class else 'barc-'+name+'-button'
+
         if not 'bezier'+name in self.source:
             self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
         if not 'bezier2'+name in self.source:
@@ -723,21 +732,11 @@ class BARC:
                     """))
             buttons.append(button)
 
-        buttonspec2 = {
-            'windbarb': "windbarb",
-            'cold': "cold",
-            'warm': "warm",
-            'occluded': "occluded",
-            'stationary': "stationary",
-            'dryintrusion': "dryintrusion",
-            'annotation':'annotation'
-        }
         buttons2 = []
-        for each in buttonspec2:
+        for each in self.frontbuttons:
             button = bokeh.models.widgets.Button(
-                label=buttonspec2[each],
-                css_classes=['barc-' + buttonspec2[each] +
-                             '-button', 'barc-button'],
+                label=self.frontbuttons[each],
+                css_classes=[self.frontbuttons[each], 'barc-button'],
                 aspect_ratio=1,
                 margin=(0, 0, 0, 0)
             )
