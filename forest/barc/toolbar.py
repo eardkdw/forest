@@ -187,12 +187,6 @@ class BARC:
             self.source['text_stamp' + chr(glyph)].add([], "fontsize")
             self.source['text_stamp' + chr(glyph)].add([], "colour")
 
-        #make the DataSources for the Beziérs
-        for name in ['warm','cold','occluded','stationary','dryintrusion']:
-            self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
-            self.source['bezier2'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
-            self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
-        
         self.tool_bar =self.ToolBar()
 
     def set_glyphs(self):
@@ -498,6 +492,13 @@ class BARC:
 
         :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
         '''
+        if not 'bezier'+name in self.source:
+            self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+        if not 'bezier2'+name in self.source:
+            self.source['bezier2'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+        if not 'fronts'+name in self.source:
+            self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
+
         render_lines = []
         for figure in self.figures:
             render_lines.extend([
