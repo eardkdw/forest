@@ -344,7 +344,7 @@ class BARC:
     def boxEdit(self):
         '''
             Creates a box edit tool for drawing on the Forest maps.
-            :returns: a BoxEditTool instance
+            :returns: a `BoxEditTool <bokeh.models.tools.BoxEditTool>` instance
         '''
         render_lines = []
         self.source['box_edit'].add([], "colour")
@@ -471,7 +471,7 @@ class BARC:
 
         return tool4
 
-    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black", css_class=None):
+    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black", css_class=None, line_dash="solid"):
         '''
         The weatherfront function of BARC. This draws a Beziér curve and repeats the symbol(s) along it.
 
@@ -488,8 +488,9 @@ class BARC:
                      the individual characters are spaced out, repeating as necessary. If it is a sequence,
                      each one is treated as a "character", and spaced in the same way. They can be of
                      arbitrary length but long strings may produce undesirable results.
-        :param text_baseline: Valid Bokeh TextBaseline or List of TextBaselines
+        :param text_baseline: Valid :py:class:`TextBaseline <bokeh.core.enums.TextBaseline>` or List of TextBaselines
         :param css_class: name of a css class to apply to the button. Defaults to ``barc-<name>-button``, where <name> is the ``name`` parameter.
+        :param line_dash: A :py:class:`DashPattern <bokeh.core.properties.DashPattern>` specification.
 
         :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
         '''
@@ -513,8 +514,8 @@ class BARC:
             render_lines.extend([
             #order matters! Typescript assumes multiline, bézier, text_stamp [, text_stamp, ...]
             figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'+name], tags=['multiline']),
-            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color=line_colour, line_width=2, tags=['bezier']),
-            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier2'+name], line_color="#00aaff", line_width=2, tags=['bezier'])
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color=line_colour, line_dash=line_dash, line_width=2, tags=['bezier']),
+            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier2'+name], line_color="#00aaff", line_dash=line_dash, line_width=2, tags=['bezier'])
             ])
             for each in symbols:
                 if not 'text' + name+each in self.source:
@@ -529,11 +530,17 @@ class BARC:
                     baseline = text_baseline
                 render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name+each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
 
-        frontTool = FrontDrawTool(
-            renderers=render_lines,
-            tags=['barc' + name],
-            custom_icon=__file__.replace(basename(__file__),'icons/%s.png' % (name,))
-        )
+        try:
+            frontTool = FrontDrawTool(
+               renderers=render_lines,
+               tags=['barc' + name],
+               custom_icon=__file__.replace(basename(__file__),'icons/%s.png' % (name,))
+            )
+        except FileNotFoundError:
+            frontTool = FrontDrawTool(
+               renderers=render_lines,
+               tags=['barc' + name],
+            )
         self.source['fronts'+name].js_on_change('data',
                 bokeh.models.CustomJS(args=dict(datasource=self.source['fronts'+name]), code="""
                     """)
@@ -675,11 +682,16 @@ class BARC:
                 self.polyLine(),
                 self.polyDraw(),
                 self.windBarb(),
-                self.weatherFront(),
+                self.weatherFront(name="warm", colour="red", symbols=chr(983431)),
                 self.weatherFront(name='cold', colour="blue", symbols=chr(983430)),
                 self.weatherFront(name='occluded', colour="purple", symbols=chr(983431)+chr(983430)),
-                self.weatherFront(name='dryintrusion', colour="#00AAFF", line_colour="#00AAFF", symbols='▮'),
                 self.weatherFront(name='stationary', text_baseline=['bottom','top'], colour=['#ff0000','#0000ff'], symbols=chr(983431)+chr(983432)),
+                self.weatherFront(name='dryintrusion', colour="#00AAFF", line_colour="#00AAFF", symbols='▮'),
+                self.weatherFront(name='dryadvection', colour="blue", line_dash="dashed", symbols=chr(983430)),
+                self.weatherFront(name='warmadvection', colour="red", line_dash="dashed", symbols=chr(983431)),
+                self.weatherFront(name='convergence', colour="orange", line_colour="orange", text_baseline="middle", symbols=chr(983593)),
+                self.weatherFront(name='squall', colour="red", line_dash="dashed", text_baseline="middle", line_colour="red", symbols=chr(983590)),
+                self.weatherFront(name='lowleveljet', colour="olive", text_baseline="middle", line_colour="olive", symbols=chr(983552)),
             )
 
             for glyph in self.allglyphs:
