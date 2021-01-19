@@ -472,7 +472,7 @@ class BARC:
 
         return tool4
 
-    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black", css_class=None, line_dash="solid"):
+    def weatherFront(self, name="warm", symbols=chr(983431), colour="red", text_baseline="bottom", line_colour="black", line2_colour=(0,0,0,0), css_class=None, line_dash="solid"):
         '''
         The weatherfront function of BARC. This draws a Bézier curve and repeats the symbol(s) along it.
 
@@ -485,6 +485,8 @@ class BARC:
 
         :param str name: Name of front type
         :param colour: Valid :py:class:`ColorSpec <bokeh.core.properties.ColorSpec>` or list of ColorSpecs
+        :param line_colour: Valid :py:class:`ColorSpec <bokeh.core.properties.ColorSpec>`.
+        :param line2_colour: Valid :py:class:`ColorSpec <bokeh.core.properties.ColorSpec>` for the second line. Defaults transparent (i.e. invisible)
         :param symbols: Unicode text string or sequence of Unicode text strings. If it is a string with length > 1,
                      the individual characters are spaced out, repeating as necessary. If it is a sequence,
                      each one is treated as a "character", and spaced in the same way. They can be of
@@ -516,12 +518,10 @@ class BARC:
                #order matters! Typescript assumes multiline is first
                figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'+name], tags=['multiline']),
                figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color=line_colour, line_dash=line_dash, line_width=2, tags=['bezier']),
-               figure.multi_line(xs='xs', ys='ys', source=self.source['bezier2'+name], color="fuchsia", line_width=2, tags=['bezier2'])
+               figure.multi_line(xs='xs', ys='ys', source=self.source['bezier2'+name], color=line2_colour, line_width=2, tags=['bezier2'])
             ])
             self.source['fronts'+name].js_on_change('data',
                 bokeh.models.CustomJS(args=dict(bez1_ds=self.source['fronts'+name], bez2_ds=self.source['bezier2'+name]), code="""
-                     console.log(bez1_ds);
-                     console.log(bez2_ds);
                     """)
             )
             for each in symbols:
@@ -696,7 +696,7 @@ class BARC:
                 self.weatherFront(name='cold', colour="blue", symbols=chr(983430)),
                 self.weatherFront(name='occluded', colour="purple", symbols=chr(983431)+chr(983430)),
                 self.weatherFront(name='stationary', text_baseline=['bottom','top'], colour=['#ff0000','#0000ff'], symbols=chr(983431)+chr(983432)),
-                self.weatherFront(name='dryintrusion', colour="#00AAFF", line_colour="#00AAFF", symbols='▮'),
+                self.weatherFront(name='dryintrusion', colour="#00AAFF", line_colour="#00AAFF", line2_colour="fuchsia", symbols='▮'),
                 self.weatherFront(name='dryadvection', colour="blue", line_dash="dashed", symbols=chr(983430)),
                 self.weatherFront(name='warmadvection', colour="red", line_dash="dashed", symbols=chr(983431)),
                 self.weatherFront(name='convergence', colour="orange", line_colour="orange", text_baseline="middle", symbols=chr(983593)),

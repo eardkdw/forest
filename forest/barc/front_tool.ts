@@ -194,6 +194,8 @@ export class FrontDrawToolView extends PolyDrawToolView {
           const segments = 200 //number of segments
           let temp_x = []
           let temp_y = []
+          let temp2_x = [] //for parallel polyline approximation
+          let temp2_y = []
           let temp_l = [0]
           //Calculating text stamp locations with ' +segments+' segments')
           for(var i=0; i < segments; i+=1)
@@ -201,6 +203,11 @@ export class FrontDrawToolView extends PolyDrawToolView {
               let t = i/segments
               temp_x.push(A*t**3 + B*t**2 +C*t +D) //At³ + Bt² + Ct + D
               temp_y.push(E*t**3 + F*t**2 +G*t +H)
+              let dx = 3*A*t**2 + 2*B*t + C //derivatives of previous
+              let dy = 3*E*t**2 + 2*F*t + G
+              let magnitude = Math.sqrt(dx**2 +dy**2)/30000
+              temp2_x.push(A*t**3 + B*t**2 +C*t +D - dy/magnitude) //At³ + Bt² + Ct + D
+              temp2_y.push(E*t**3 + F*t**2 +G*t +H + dx/magnitude)
               if(i>0){
                  temp_l.push(Math.sqrt((temp_x[temp_x.length-1]-temp_x[temp_x.length-2])**2 + (temp_y[temp_y.length-1]-temp_y[temp_y.length-2])**2)+temp_l[temp_l.length-1])
               }
@@ -208,8 +215,8 @@ export class FrontDrawToolView extends PolyDrawToolView {
           //draw polyline approximating Bezier
           //const bez2xs = bez2_ds.data[xkey][xidx]
           //const bez2ys = bez2_ds.data[ykey][xidx]
-          bez2_ds.data[xkey][xidx] = bez2_ds.data[xkey][xidx].concat(temp_x, [x1[beztot]])
-          bez2_ds.data[ykey][xidx] = bez2_ds.data[ykey][xidx].concat(temp_y, [y1[beztot]])
+          bez2_ds.data[xkey][xidx] = bez2_ds.data[xkey][xidx].concat(temp2_x, [x1[beztot]])
+          bez2_ds.data[ykey][xidx] = bez2_ds.data[ykey][xidx].concat(temp2_y, [y1[beztot]])
           //bez2xs = temp_x.concat([x1[beztot]])
           //bez2ys = temp_y.concat([y1[beztot]])
             
