@@ -506,18 +506,22 @@ class BARC:
         if not 'bezier'+name in self.source:
             self.source['bezier'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
         if not 'bezier2'+name in self.source:
-            self.source['bezier2'+name] = ColumnDataSource(data=dict(x0=[], y0=[], x1=[], y1=[], cx0=[], cy0=[], cx1=[], cy1=[]))
+            self.source['bezier2'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
         if not 'fronts'+name in self.source:
             self.source['fronts'+name] = ColumnDataSource(data=dict(xs=[], ys=[]))
 
         render_lines = []
         for figure in self.figures:
             render_lines.extend([
-            #order matters! Typescript assumes multiline, bézier, text_stamp [, text_stamp, ...]
-            figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'+name], tags=['multiline']),
-            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color=line_colour, line_dash=line_dash, line_width=2, tags=['bezier']),
-            figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier2'+name], line_color="#00aaff", line_dash=line_dash, line_width=2, tags=['bezier'])
+               #order matters! Typescript assumes multiline is first
+               figure.multi_line(xs='xs',ys='ys', color="#aaaaaa", line_width=1, source=self.source['fronts'+name], tags=['multiline']),
+               figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color=line_colour, line_dash=line_dash, line_width=2, tags=['bezier']),
+               figure.multi_line(xs='xs', ys='ys', source=self.source['bezier2'+name], color="fuchsia", line_width=2, tags=['bezier2'])
             ])
+            self.source['fronts'+name].js_on_change('data',
+                bokeh.models.CustomJS(args=dict(bez1_ds=self.source['fronts'+name], bez2_ds=self.source['bezier2'+name]), code="""
+                    """)
+            )
             for each in symbols:
                 if not 'text' + name+each in self.source:
                   self.source['text' + name+each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
@@ -656,7 +660,10 @@ class BARC:
                n.value = jsonds['annotations'][name]
         for each in self.source:
             if each != 'annotations':
-               self.source[each].data = jsonds[each]
+               try:
+                  self.source[each].data = jsonds[each]
+               except KeyError:
+                  pass;
 
         
       

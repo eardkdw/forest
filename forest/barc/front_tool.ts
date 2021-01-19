@@ -31,6 +31,8 @@ export class FrontDrawToolView extends PolyDrawToolView {
     const renderer = this.model.renderers[0]
     const bez = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("bezier") > -1); })
     const bez_ds = bez[0].data_source
+    const bez2 = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("bezier2") > -1); })
+    const bez2_ds = bez2[0].data_source
     const point = this._map_drag(ev.sx, ev.sy, renderer)
 
     if (!this._initialized)
@@ -53,6 +55,8 @@ export class FrontDrawToolView extends PolyDrawToolView {
       this._pop_glyphs(cds, this.model.num_objects)
       if (xkey) cds.get_array(xkey).push([x, x])
       if (ykey) cds.get_array(ykey).push([y, y])
+      if (xkey) bez2_ds.get_array(xkey).push([x, x])
+      if (ykey) bez2_ds.get_array(ykey).push([y, y])
       if (x0key) bez_ds.get_array(x0key).push([null])
       if (y0key) bez_ds.get_array(y0key).push([null])
       if (cx0key) bez_ds.get_array(cx0key).push([null])
@@ -102,6 +106,7 @@ export class FrontDrawToolView extends PolyDrawToolView {
       }
      }
      this._emit_cds_changes(bez_ds, true, false, emit)
+     this._emit_cds_changes(bez2_ds, true, false, emit)
      //bez_ds.change.emit()
      this._emit_cds_changes(cds, true, false, emit)
      //cds.change.emit()
@@ -111,8 +116,10 @@ export class FrontDrawToolView extends PolyDrawToolView {
     const renderer = this.model.renderers[0]
     const glyph: any = renderer.glyph
     const bez = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("bezier") > -1); })
+    const bez2 = this.model.renderers.filter(function(element) { return (element.glyph.tags.indexOf("bezier2") > -1); })
     const cds = renderer.data_source
     const bez_ds = bez[0].data_source
+    const bez2_ds = bez2[0].data_source
     const bez_glyph: any = bez[0].glyph
     const [xkey, ykey] = [glyph.xs.field, glyph.ys.field]
     const [x0key, y0key] = [bez_glyph.x0.field, bez_glyph.y0.field]
@@ -230,6 +237,12 @@ export class FrontDrawToolView extends PolyDrawToolView {
               let dx = 3*A*t**2 + 2*B*t + C //derivatives of previous
               let dy = 3*E*t**2 + 2*F*t + G
 
+              //dray polyline approximating Bezier
+              const bez2xs = bez2_ds.data[xkey][bez2_ds.data[xkey].length-1]
+              const bez2ys = bez2_ds.data[ykey][bez2_ds.data[ykey].length-1]
+              bez2xs.push(A*t**3 + B*t**2 +C*t +D)
+              bez2ys.push(E*t**3 + F*t**2 +G*t +H)
+            
               let text_ds = ts_fig[order % ts_fig.length].data_source
               text_ds.get_array('x').push(A*t**3 + B*t**2 +C*t +D) //At³ + Bt² + Ct + D
               text_ds.get_array('y').push(E*t**3 + F*t**2 +G*t +H)
@@ -239,7 +252,6 @@ export class FrontDrawToolView extends PolyDrawToolView {
           //ts.data_source.data = text_ds.data
           ts_fig.forEach(function(t) {
             t.data_source.change.emit()
-            console.log(t.data_source);
           } ) 
           })
          } 
