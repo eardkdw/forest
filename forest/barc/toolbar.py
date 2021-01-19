@@ -520,6 +520,8 @@ class BARC:
             ])
             self.source['fronts'+name].js_on_change('data',
                 bokeh.models.CustomJS(args=dict(bez1_ds=self.source['fronts'+name], bez2_ds=self.source['bezier2'+name]), code="""
+                     console.log(bez1_ds);
+                     console.log(bez2_ds);
                     """)
             )
             for each in symbols:

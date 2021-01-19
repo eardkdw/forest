@@ -55,8 +55,8 @@ export class FrontDrawToolView extends PolyDrawToolView {
       this._pop_glyphs(cds, this.model.num_objects)
       if (xkey) cds.get_array(xkey).push([x, x])
       if (ykey) cds.get_array(ykey).push([y, y])
-      if (xkey) bez2_ds.get_array(xkey).push([x, x])
-      if (ykey) bez2_ds.get_array(ykey).push([y, y])
+      if (xkey) bez2_ds.get_array(xkey).push([])
+      if (ykey) bez2_ds.get_array(ykey).push([])
       if (x0key) bez_ds.get_array(x0key).push([null])
       if (y0key) bez_ds.get_array(y0key).push([null])
       if (cx0key) bez_ds.get_array(cx0key).push([null])
@@ -66,6 +66,7 @@ export class FrontDrawToolView extends PolyDrawToolView {
       if (x1key) bez_ds.get_array(x1key).push([null])
       if (y1key) bez_ds.get_array(y1key).push([null])
       this._pad_empty_columns(cds, [xkey, ykey])
+      this._pad_empty_columns(bez2_ds, [xkey, ykey])
     } else if (mode == 'edit') {
       if (xkey) {
         const xs = cds.data[xkey][cds.data[xkey].length-1]
@@ -204,6 +205,14 @@ export class FrontDrawToolView extends PolyDrawToolView {
                  temp_l.push(Math.sqrt((temp_x[temp_x.length-1]-temp_x[temp_x.length-2])**2 + (temp_y[temp_y.length-1]-temp_y[temp_y.length-2])**2)+temp_l[temp_l.length-1])
               }
           }
+          //draw polyline approximating Bezier
+          //const bez2xs = bez2_ds.data[xkey][xidx]
+          //const bez2ys = bez2_ds.data[ykey][xidx]
+          bez2_ds.data[xkey][xidx] = bez2_ds.data[xkey][xidx].concat(temp_x, [x1[beztot]])
+          bez2_ds.data[ykey][xidx] = bez2_ds.data[ykey][xidx].concat(temp_y, [y1[beztot]])
+          //bez2xs = temp_x.concat([x1[beztot]])
+          //bez2ys = temp_y.concat([y1[beztot]])
+            
           const total_length = temp_l[temp_l.length-1]
           const spacing = (this.parent.model.y_range.end - this.parent.model.y_range.start)/50
 
@@ -215,6 +224,9 @@ export class FrontDrawToolView extends PolyDrawToolView {
           figlist.forEach(function(figtag: string) { 
           let order=0
           const ts_fig = ts.filter(function(element) { return (element.glyph.tags.indexOf(figtag) > -1); })
+          //add first point to polylines
+          //bez2xs.push(x0[beztot])
+          //bez2ys.push(y0[beztot])
           for(var i=0.0; i < total_length; i+=spacing)
           {
               //i is target arc length
@@ -237,18 +249,13 @@ export class FrontDrawToolView extends PolyDrawToolView {
               let dx = 3*A*t**2 + 2*B*t + C //derivatives of previous
               let dy = 3*E*t**2 + 2*F*t + G
 
-              //dray polyline approximating Bezier
-              const bez2xs = bez2_ds.data[xkey][bez2_ds.data[xkey].length-1]
-              const bez2ys = bez2_ds.data[ykey][bez2_ds.data[ykey].length-1]
-              bez2xs.push(A*t**3 + B*t**2 +C*t +D)
-              bez2ys.push(E*t**3 + F*t**2 +G*t +H)
-            
               let text_ds = ts_fig[order % ts_fig.length].data_source
               text_ds.get_array('x').push(A*t**3 + B*t**2 +C*t +D) //At³ + Bt² + Ct + D
               text_ds.get_array('y').push(E*t**3 + F*t**2 +G*t +H)
               text_ds.get_array('angle').push(Math.atan2(dy,dx))
               order++;
           }
+          //add last point to polylines
           //ts.data_source.data = text_ds.data
           ts_fig.forEach(function(t) {
             t.data_source.change.emit()
