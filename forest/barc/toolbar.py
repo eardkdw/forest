@@ -432,7 +432,7 @@ class BARC:
                     }
                 }
                 """)
-                                                       )
+        )
         self.figures[0].y_range.js_on_change('start',
             bokeh.models.CustomJS(args=dict(render_text_stamp=render_lines[0],
             figure=self.figures[0]), code="""
@@ -442,7 +442,7 @@ class BARC:
             }
             render_text_stamp.glyph.change.emit();
             """)
-                                    )
+        )
         tool3 = PointDrawTool(
             renderers=[render_lines[0]],
             tags=['barc' + glyph],
@@ -526,7 +526,11 @@ class BARC:
             )
             for each in symbols:
                 if not 'text' + name+each in self.source:
-                  self.source['text' + name+each] = ColumnDataSource(data=dict(x=[], y=[], angle=[]))
+                  self.source['text' + name+each] = ColumnDataSource(data.EMPTY)
+                  self.source['text' + name+each].add([], "datasize")
+                  self.source['text' + name+each].add([], "fontsize")
+                  self.source['text' + name+each].add([], "angle")
+                  ColumnDataSource(data=dict(x=[], y=[], angle=[], fontsize=[]))
                 if isinstance(colour, type([])):
                     col = colour[symbols.index(each) % len(colour)]
                 else:
@@ -535,13 +539,13 @@ class BARC:
                     baseline = text_baseline[symbols.index(each) % len(colour)]
                 else:
                     baseline = text_baseline
-                render_lines.append(figure.text_stamp(x='x', y='y', angle='angle', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name+each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
+                render_lines.append(figure.text_stamp(x='xs', y='ys', angle='angle', text_font_size='fontsize', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name+each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
 
         try:
             frontTool = FrontDrawTool(
                renderers=render_lines,
                tags=['barc' + name],
-               custom_icon=__file__.replace(basename(__file__),'icons/%s.png' % (name,))
+               custom_icon=__file__.replace(basename(__file__),'icons/splines/%s.png' % (name,))
             )
         except FileNotFoundError:
             frontTool = FrontDrawTool(
@@ -701,7 +705,7 @@ class BARC:
                 self.weatherFront(name='warmadvection', colour="red", line_dash="dashed", symbols=chr(983431)),
                 self.weatherFront(name='convergence', colour="orange", line_colour="orange", text_baseline="middle", symbols=chr(983593)),
                 self.weatherFront(name='squall', colour="red", line_dash="dashed", text_baseline="middle", line_colour="red", symbols=chr(983590)),
-                self.weatherFront(name='streamline', colour="#0000f0", line_dash="dashed", text_baseline="middle", line_colour="#00fe00", symbols=chr(9679)),
+                self.weatherFront(name='streamline', colour="#0000f0", text_baseline="middle", line_colour="#00fe00", symbols=chr(9679)),
                 self.weatherFront(name='lowleveljet', colour="olive", text_baseline="middle", line_colour="olive", symbols=chr(983552)),
             )
 
