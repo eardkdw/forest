@@ -259,19 +259,16 @@ export class FrontDrawToolView extends PolyDrawToolView {
               let text_ds = ts_fig[order % ts_fig.length].data_source
               const ts_glyph: any = ts_fig[0].glyph
               const [ts_xkey, ts_ykey, ts_fontsizekey, ts_anglekey] = [ts_glyph.x.field, ts_glyph.y.field, ts_glyph.text_font_size.field, ts_glyph.angle.field]
-              console.log(ts_glyph);
               text_ds.get_array(ts_xkey).push(A*t**3 + B*t**2 +C*t +D) //At³ + Bt² + Ct + D
               text_ds.get_array(ts_ykey).push(E*t**3 + F*t**2 +G*t +H)
               text_ds.get_array(ts_fontsizekey).push(null)
               text_ds.get_array('datasize').push(null)
               text_ds.get_array(ts_anglekey).push(Math.atan2(dy,dx))
+              text_ds.change.emit();
               order++;
           }
           //add last point to polylines
           //ts.data_source.data = text_ds.data
-          ts_fig.forEach(function(t) {
-            t.data_source.change.emit()
-          } ) 
           })
          } 
         }

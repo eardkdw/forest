@@ -498,6 +498,7 @@ class BARC:
         :returns: :py:class:`FrontDrawTool <forest.barc.front_tool.FrontDrawTool>` instance
         '''
 
+        starting_font_size=10
         #add definition dict for front<->css mapping, if not already present
         # should be a mapping of name: css_class_name (e.g. "warm":"barc-warm-button") 
         if not hasattr(self, 'frontbuttons'):
@@ -520,17 +521,12 @@ class BARC:
                figure.bezier(x0='x0', y0='y0', x1='x1', y1='y1', cx0='cx0', cy0='cy0', cx1="cx1", cy1="cy1", source=self.source['bezier'+name], line_color=line_colour, line_dash=line_dash, line_width=2, tags=['bezier']),
                figure.multi_line(xs='xs', ys='ys', source=self.source['bezier2'+name], color=line2_colour, line_width=2, tags=['bezier2'])
             ])
-            self.source['fronts'+name].js_on_change('data',
-                bokeh.models.CustomJS(args=dict(bez1_ds=self.source['fronts'+name], bez2_ds=self.source['bezier2'+name]), code="""
-                    """)
-            )
             for each in symbols:
                 if not 'text' + name+each in self.source:
                   self.source['text' + name+each] = ColumnDataSource(data.EMPTY)
                   self.source['text' + name+each].add([], "datasize")
                   self.source['text' + name+each].add([], "fontsize")
                   self.source['text' + name+each].add([], "angle")
-                  ColumnDataSource(data=dict(x=[], y=[], angle=[], fontsize=[]))
                 if isinstance(colour, type([])):
                     col = colour[symbols.index(each) % len(colour)]
                 else:
@@ -540,6 +536,38 @@ class BARC:
                 else:
                     baseline = text_baseline
                 render_lines.append(figure.text_stamp(x='xs', y='ys', angle='angle', text_font_size='fontsize', text_font='BARC', text_baseline=baseline, color=value(col), text=value(each), source=self.source['text'+name+each], tags=['text_stamp','fig'+str(self.figures.index(figure))]))
+
+                self.source['bezier'+name].js_on_change('data', 
+                  bokeh.models.CustomJS(args=dict(datasource=self.source['text'+name+each],
+                  starting_font_size=starting_font_size, figure=self.figures[0],
+                  colourPicker=self.colourPicker, widthPicker=self.widthPicker
+                  ), code="""
+                     for(var g = 0; g < datasource.data['xs'].length; g++)
+                     {
+                         if(!datasource.data['fontsize'][g])
+                         {
+                             datasource.data['fontsize'][g] = (widthPicker.value * starting_font_size) +'px';
+                         }
+
+                         //calculate initial datasize
+                         if(!datasource.data['datasize'][g])
+                         {
+                             var starting_font_proportion = (widthPicker.value * starting_font_size)/(figure.inner_height);
+                             datasource.data['datasize'][g] = (starting_font_proportion * (figure.y_range.end - figure.y_range.start));
+                         }
+                     }
+                     """)
+                )
+                self.figures[0].y_range.js_on_change('start',
+                  bokeh.models.CustomJS(args=dict(datasource=self.source['text'+name+each],
+                  figure=self.figures[0]), code="""
+                  for(var g = 0; g < datasource.data['fontsize'].length; g++)
+                  {
+                     datasource.data['fontsize'][g] = (((datasource.data['datasize'][g])/ (figure.y_range.end - figure.y_range.start))*figure.inner_height) + 'px';
+                  }
+                  datasource.change.emit();
+                  """)
+                )
 
         try:
             frontTool = FrontDrawTool(
